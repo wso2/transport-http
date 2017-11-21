@@ -59,7 +59,7 @@ public class ServerConnectorErrorListener implements HttpConnectorListener {
                 try {
                     statusFuture = httpRequestMessage.respond(responseMsg);
                     statusFuture = statusFuture.sync();
-                    status = statusFuture.getStatus();
+                    status = statusFuture.getStatus().getCause();
                 } catch (ServerConnectorException e) {
                     logger.error("Error occurred during message processing: ", e);
                 } catch (InterruptedException e) {

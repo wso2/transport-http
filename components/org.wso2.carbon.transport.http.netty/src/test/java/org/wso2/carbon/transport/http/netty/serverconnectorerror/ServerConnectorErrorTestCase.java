@@ -55,10 +55,9 @@ public class ServerConnectorErrorTestCase {
     @Test
     public void serverConnectorErrorExistTest() {
         try {
-            //First request
-            HttpClient client = new HttpClient(baseURI, "/", HttpMethod.POST.name());
-            client.createAndSendRequest();
-            //Second request
+            HttpClient client = new HttpClient();
+            client.createAndSendRequest(baseURI, "/", HttpMethod.POST, "Hello world");
+            //Adjacent request
             HttpURLConnection urlConn = TestUtil.request(baseURI, "/", HttpMethod.POST.name(), true);
             assertEquals("java.nio.channels.ClosedChannelException", urlConn.getHeaderField("status"));
             urlConn.disconnect();

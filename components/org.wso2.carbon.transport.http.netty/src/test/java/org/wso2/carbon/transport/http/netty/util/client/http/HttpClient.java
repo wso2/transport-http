@@ -31,19 +31,14 @@ import java.net.URI;
 public class HttpClient {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
-    private final int port;
-    private final String host, uri;
-    private final HttpMethod method;
-    private String stringContent = "Hello world";
 
-    public HttpClient(URI baseURI, String path, String method) {
-        this.host = baseURI.getHost();
-        this.port = baseURI.getPort();
-        this.uri = path;
-        this.method = new HttpMethod(method);
-    }
+    public void createAndSendRequest(URI baseURI, String path, HttpMethod method, String stringContent) {
+        String host = baseURI.getHost();
+        int port = baseURI.getPort();
+        String uri = path;
+        HttpMethod method1 = method;
+        String stringContent1 = stringContent;
 
-    public void createAndSendRequest() {
         EventLoopGroup group = new NioEventLoopGroup();
         ByteBuf content = null;
         try {
