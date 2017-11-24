@@ -49,6 +49,7 @@ public class ServerConnectorErrorListener implements HttpConnectorListener {
     public void onMessage(HTTPCarbonMessage httpRequestMessage) {
         executor.execute(() -> {
             HTTPCarbonMessage responseMsg = httpRequestMessage.cloneCarbonMessageWithData();
+            //Thread sleep is to wait until the Request channel is closed
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

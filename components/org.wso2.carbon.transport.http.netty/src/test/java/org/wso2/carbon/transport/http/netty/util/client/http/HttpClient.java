@@ -47,8 +47,8 @@ public class HttpClient {
             logger.error("Error occurred during string content processing: ", e);
         }
         try {
-            Bootstrap b = new Bootstrap();
-            b.group(group)
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(group)
                     .channel(NioSocketChannel.class)
                     .remoteAddress(new InetSocketAddress(host, port))
                     .handler(new ChannelInitializer<SocketChannel>() {
@@ -58,7 +58,7 @@ public class HttpClient {
                             ch.pipeline().addLast(new HttpClientHandler());
                         }
                     });
-            Channel ch = b.connect(host, port).sync().channel();
+            Channel ch = bootstrap.connect(host, port).sync().channel();
 
             HttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, uri, content);
             request.headers().set(HttpHeaderNames.HOST, host);
