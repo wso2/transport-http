@@ -1,4 +1,4 @@
-package org.wso2.carbon.transport.http.netty.util.client.http;
+package org.wso2.transport.http.netty.util.client.http;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;

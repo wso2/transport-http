@@ -17,15 +17,15 @@
  *
  */
 
-package org.wso2.carbon.transport.http.netty.serverconnectorerror;
+package org.wso2.transport.http.netty.serverconnectorerror;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
-import org.wso2.carbon.transport.http.netty.contract.HttpConnectorListener;
-import org.wso2.carbon.transport.http.netty.contract.ServerConnectorException;
-import org.wso2.carbon.transport.http.netty.contractimpl.HttpResponseStatusFuture;
-import org.wso2.carbon.transport.http.netty.message.HTTPCarbonMessage;
+import org.wso2.transport.http.netty.config.TransportsConfiguration;
+import org.wso2.transport.http.netty.contract.HttpConnectorListener;
+import org.wso2.transport.http.netty.contract.ServerConnectorException;
+import org.wso2.transport.http.netty.contractimpl.HttpResponseStatusFuture;
+import org.wso2.transport.http.netty.message.HTTPCarbonMessage;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

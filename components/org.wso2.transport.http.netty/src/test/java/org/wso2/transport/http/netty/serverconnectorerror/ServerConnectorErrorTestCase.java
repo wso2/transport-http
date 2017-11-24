@@ -16,18 +16,18 @@
  * under the License.
  */
 
-package org.wso2.carbon.transport.http.netty.serverconnectorerror;
+package org.wso2.transport.http.netty.serverconnectorerror;
 
 import io.netty.handler.codec.http.HttpMethod;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
-import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
-import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
-import org.wso2.carbon.transport.http.netty.contract.ServerConnector;
-import org.wso2.carbon.transport.http.netty.util.TestUtil;
-import org.wso2.carbon.transport.http.netty.util.client.http.HttpClient;
+import org.wso2.transport.http.netty.config.TransportsConfiguration;
+import org.wso2.transport.http.netty.config.YAMLTransportConfigurationBuilder;
+import org.wso2.transport.http.netty.contract.ServerConnector;
+import org.wso2.transport.http.netty.util.TestUtil;
+import org.wso2.transport.http.netty.util.client.http.HttpClient;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
