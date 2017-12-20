@@ -19,7 +19,7 @@
 
 package org.wso2.transport.http.netty.contract.websocket;
 
-import javax.websocket.Session;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
 
 /**
  * Future listener for WebSocket handshake.
@@ -29,9 +29,9 @@ public interface HandshakeListener {
     /**
      * Notify the success of the handshake.
      *
-     * @param session Session for the successful handshake.
+     * @param handshakeCompleter {@link HandshakeCompleter} for the successful handshake.
      */
-    public void onSuccess(Session session);
+    public void onSuccess(HandshakeCompleter handshakeCompleter);
 
     /**
      * Notify error on handshake.

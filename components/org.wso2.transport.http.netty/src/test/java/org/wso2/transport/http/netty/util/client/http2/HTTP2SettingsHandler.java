@@ -41,7 +41,7 @@ public class HTTP2SettingsHandler extends SimpleChannelInboundHandler<Http2Setti
 
     /**
      * Wait for this handler to be added after the upgrade to HTTP/2, and for initial preface
-     * handshake to complete.
+     * handshake to startListeningForFrames.
      *
      * @param timeout Time to wait
      * @param unit    {@link TimeUnit} for {@code HTTP2_RESPONSE_TIME_OUT}

@@ -22,6 +22,7 @@ package org.wso2.transport.http.netty.websocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeFuture;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeListener;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketBinaryMessage;
@@ -59,7 +60,7 @@ public class WebSocketTestServerConnectorListener implements WebSocketConnectorL
         HandshakeFuture future = initMessage.handshake(null, true, 3000);
         future.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
                 sessionList.forEach(
                         currentSession -> {
                             try {
@@ -70,7 +71,8 @@ public class WebSocketTestServerConnectorListener implements WebSocketConnectorL
                             }
                         }
                 );
-                sessionList.add(session);
+                sessionList.add(handshakeCompleter.getSession());
+                handshakeCompleter.startListeningForFrames();
             }
 
             @Override

@@ -42,6 +42,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeFuture;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketConnectorListener;
 import org.wso2.transport.http.netty.contractimpl.websocket.HandshakeFutureImpl;
@@ -51,6 +52,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
+import javax.websocket.Session;
 
 /**
  * WebSocket client for sending and receiving messages in WebSocket as a client.
@@ -174,17 +176,26 @@ public class WebSocketClient {
                         handler.setActualSubProtocol(actualSubProtocol);
                         session.setNegotiatedSubProtocol(actualSubProtocol);
                         session.setIsOpen(true);
-                        handshakeFuture.notifySuccess(session);
+                        handshakeFuture.notifySuccess(new HandshakeCompleter() {
+                            @Override
+                            public Session getSession() {
+                                return session;
+                            }
+
+                            @Override
+                            public void startListeningForFrames() {
+                                // Do nothing.
+                            }
+                        });
                     } else {
                         handshakeFuture.notifyError(cause);
                     }
                 }
-            }).sync();
+            });
             handshakeFuture.setChannelFuture(future);
         } catch (Throwable t) {
             handshakeFuture.notifyError(t);
         }
-
         return handshakeFuture;
     }
 }
