@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.common.Constants;
 import org.wso2.transport.http.netty.common.Util;
+import org.wso2.transport.http.netty.config.ChunkConfig;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
 import org.wso2.transport.http.netty.contractimpl.HttpOutboundRespListener;
 import org.wso2.transport.http.netty.internal.HTTPTransportContextHolder;
@@ -58,11 +59,15 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
     private Map<String, GenericObjectPool> targetChannelPool;
     private ServerConnectorFuture serverConnectorFuture;
     private String interfaceId;
+    private ChunkConfig chunkConfig;
     private HandlerExecutor handlerExecutor;
 
-    public SourceHandler(ServerConnectorFuture serverConnectorFuture, String interfaceId) throws Exception {
+    public SourceHandler(ServerConnectorFuture serverConnectorFuture,
+            String interfaceId, ChunkConfig chunkConfig) throws Exception {
+
         this.serverConnectorFuture = serverConnectorFuture;
         this.interfaceId = interfaceId;
+        this.chunkConfig = chunkConfig;
         this.targetChannelPool = new ConcurrentHashMap<>();
     }
 
@@ -139,7 +144,8 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
             if (serverConnectorFuture != null) {
                 try {
                     ServerConnectorFuture outboundRespFuture = httpRequestMsg.getHttpResponseFuture();
-                    outboundRespFuture.setHttpConnectorListener(new HttpOutboundRespListener(ctx, httpRequestMsg));
+                    outboundRespFuture
+                            .setHttpConnectorListener(new HttpOutboundRespListener(ctx, httpRequestMsg, chunkConfig));
                     this.serverConnectorFuture.notifyHttpListener(httpRequestMsg);
                 } catch (Exception e) {
                     log.error("Error while notifying listeners", e);
