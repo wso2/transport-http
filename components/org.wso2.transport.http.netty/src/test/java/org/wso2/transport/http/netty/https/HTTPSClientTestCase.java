@@ -18,9 +18,6 @@
 
 package org.wso2.transport.http.netty.https;
 
-import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -71,12 +68,12 @@ public class HTTPSClientTestCase {
                 TestUtil.getConfiguration("/simple-test-config" + File.separator + "netty-transports.yml");
         Set<SenderConfiguration> senderConfig = transportsConfiguration.getSenderConfigurations();
         senderConfig.forEach(config -> {
-            if (config.getId().contains(TestUtil.HTTPS_SCHEME)) {
+            if (config.getId().contains(Constants.HTTPS_SCHEME)) {
                 config.setTrustStoreFile(TestUtil.getAbsolutePath(config.getTrustStoreFile()));
             }
         });
 
-        httpsServer = TestUtil.startHttpsServer(TestUtil.TEST_HTTPS_SERVER_PORT,
+        httpsServer = TestUtil.startHttpsServer(TestUtil.HTTPS_SERVER_PORT,
                 new MockServerInitializer(testValue, "text/plain", 200));
         HttpWsConnectorFactory connectorFactory = new HttpWsConnectorFactoryImpl();
         httpClientConnector = connectorFactory.createHttpClientConnector(
@@ -87,13 +84,7 @@ public class HTTPSClientTestCase {
     @Test
     public void testHttpsGet() {
         try {
-            HTTPCarbonMessage msg = new HTTPCarbonMessage(new DefaultHttpRequest(HttpVersion.HTTP_1_1,
-                                                                                 HttpMethod.GET, ""));
-            msg.setProperty("PORT", TestUtil.TEST_HTTPS_SERVER_PORT);
-            msg.setProperty("PROTOCOL", TestUtil.HTTPS_SCHEME);
-            msg.setProperty("HOST", "localhost");
-            msg.setProperty("HTTP_METHOD", "GET");
-            msg.setEndOfMsgAdded(true);
+            HTTPCarbonMessage msg = TestUtil.createHttpsPostReq(TestUtil.HTTPS_SERVER_PORT, "", "");
 
             CountDownLatch latch = new CountDownLatch(1);
             HTTPConnectorListener listener = new HTTPConnectorListener(latch);

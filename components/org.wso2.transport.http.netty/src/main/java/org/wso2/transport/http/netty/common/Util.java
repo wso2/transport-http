@@ -19,23 +19,18 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
-import org.wso2.carbon.messaging.Header;
-import org.wso2.carbon.messaging.Headers;
 import org.wso2.transport.http.netty.common.ssl.SSLConfig;
 import org.wso2.transport.http.netty.config.Parameter;
 import org.wso2.transport.http.netty.listener.RequestDataHolder;
 import org.wso2.transport.http.netty.message.HTTPCarbonMessage;
 
 import java.io.File;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -47,26 +42,6 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  * Includes utility methods for creating http requests and responses and their related properties.
  */
 public class Util {
-
-    private static final String DEFAULT_HTTP_METHOD_POST = "POST";
-    private static final String DEFAULT_VERSION_HTTP_1_1 = "HTTP/1.1";
-
-    public static Headers getHeaders(HttpMessage message) {
-        List<Header> headers = new LinkedList<>();
-        if (message.headers() != null) {
-            for (Map.Entry<String, String> k : message.headers().entries()) {
-                headers.add(new Header(k.getKey(), k.getValue()));
-            }
-        }
-        return new Headers(headers);
-    }
-
-    public static void setHeaders(HttpMessage message, Headers headers) {
-        HttpHeaders httpHeaders = message.headers();
-        for (Header header : headers.getAll()) {
-            httpHeaders.add(header.getName(), header.getValue());
-        }
-    }
 
     private static String getStringValue(HTTPCarbonMessage msg, String key, String defaultValue) {
         String value = (String) msg.getProperty(key);
@@ -86,82 +61,101 @@ public class Util {
         return value;
     }
 
-    public static HttpResponse createHttpResponse(HTTPCarbonMessage msg) {
-        return createHttpResponse(msg, false);
-    }
-
     @SuppressWarnings("unchecked")
-    public static HttpResponse createHttpResponse(HTTPCarbonMessage msg, boolean keepAlive) {
-        HttpVersion httpVersion = new HttpVersion(Util.getStringValue(msg, Constants.HTTP_VERSION, HTTP_1_1.text()),
-                true);
+    public static HttpResponse createHttpResponse(HTTPCarbonMessage outboundResponseMsg, boolean keepAlive) {
+        HttpVersion httpVersion = new HttpVersion(Util
+                .getStringValue(outboundResponseMsg, Constants.HTTP_VERSION, HTTP_1_1.text()), true);
+        HttpResponseStatus httpResponseStatus = getHttpResponseStatus(outboundResponseMsg);
 
-        int statusCode = Util.getIntValue(msg, Constants.HTTP_STATUS_CODE, 200);
-
-        String reasonPhrase = Util.getStringValue(msg, Constants.HTTP_REASON_PHRASE,
-                HttpResponseStatus.valueOf(statusCode).reasonPhrase());
-
-        HttpResponseStatus httpResponseStatus = new HttpResponseStatus(statusCode, reasonPhrase);
-
-        DefaultHttpResponse outgoingResponse = new DefaultHttpResponse(httpVersion, httpResponseStatus, false);
+        HttpResponse outboundNettyResponse = new DefaultHttpResponse(httpVersion, httpResponseStatus, false);
+        outboundNettyResponse.setProtocolVersion(httpVersion);
+        outboundNettyResponse.setStatus(httpResponseStatus);
 
         if (!keepAlive) {
-            msg.setHeader(Constants.HTTP_CONNECTION, Constants.CONNECTION_CLOSE);
+            outboundResponseMsg.setHeader(Constants.HTTP_CONNECTION, Constants.CONNECTION_CLOSE);
         }
 
-        for (Map.Entry<String, String> entry : msg.getHeaders()) {
-            outgoingResponse.headers().add(entry.getKey(), entry.getValue());
-        }
+        outboundNettyResponse.headers().setAll(outboundResponseMsg.getHeaders());
 
-        return outgoingResponse;
+        return outboundNettyResponse;
+    }
+
+    private static HttpResponseStatus getHttpResponseStatus(HTTPCarbonMessage msg) {
+        int statusCode = Util.getIntValue(msg, Constants.HTTP_STATUS_CODE, 200);
+        String reasonPhrase = Util.getStringValue(msg, Constants.HTTP_REASON_PHRASE,
+                HttpResponseStatus.valueOf(statusCode).reasonPhrase());
+        return new HttpResponseStatus(statusCode, reasonPhrase);
     }
 
     @SuppressWarnings("unchecked")
-    public static HttpRequest createHttpRequest(HTTPCarbonMessage msg) {
-        HttpMethod httpMethod;
-        if (null != msg.getProperty(Constants.HTTP_METHOD)) {
-            httpMethod = new HttpMethod((String) msg.getProperty(Constants.HTTP_METHOD));
-        } else {
-            httpMethod = new HttpMethod(DEFAULT_HTTP_METHOD_POST);
-        }
-        HttpVersion httpVersion;
-        if (null != msg.getProperty(Constants.HTTP_VERSION)) {
-            httpVersion = new HttpVersion((String) msg.getProperty(Constants.HTTP_VERSION), true);
-        } else {
-            httpVersion = new HttpVersion(DEFAULT_VERSION_HTTP_1_1, true);
-        }
-        if ((String) msg.getProperty(Constants.TO) == null) {
-            msg.setProperty(Constants.TO, "/");
-        }
-        HttpRequest outgoingRequest = new DefaultHttpRequest(httpVersion, httpMethod,
-                (String) msg.getProperty(Constants.TO), false);
-        HttpHeaders headers = msg.getHeaders();
-        outgoingRequest.headers().setAll(headers);
-        return outgoingRequest;
+    public static HttpRequest createHttpRequest(HTTPCarbonMessage outboundRequestMsg) {
+        HttpMethod httpMethod = getHttpMethod(outboundRequestMsg);
+        HttpVersion httpVersion = getHttpVersion(outboundRequestMsg);
+        String requestPath = getRequestPath(outboundRequestMsg);
+
+        HttpRequest outboundNettyRequest = new DefaultHttpRequest(httpVersion, httpMethod,
+                (String) outboundRequestMsg.getProperty(Constants.TO), false);
+        outboundNettyRequest.setMethod(httpMethod);
+        outboundNettyRequest.setProtocolVersion(httpVersion);
+        outboundNettyRequest.setUri(requestPath);
+
+        outboundNettyRequest.headers().setAll(outboundRequestMsg.getHeaders());
+
+        return outboundNettyRequest;
     }
 
-    public static void setupTransferEncodingForEmptyRequest(HTTPCarbonMessage httpOutboundRequest,
-            boolean chunkDisabled) {
-        if (chunkDisabled) {
-            httpOutboundRequest.removeHeader(Constants.HTTP_TRANSFER_ENCODING);
-            httpOutboundRequest.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(0));
-        } else {
-            httpOutboundRequest.removeHeader(Constants.HTTP_CONTENT_LENGTH);
-            httpOutboundRequest.setHeader(Constants.HTTP_TRANSFER_ENCODING, Constants.CHUNKED);
+    private static String getRequestPath(HTTPCarbonMessage outboundRequestMsg) {
+        if (outboundRequestMsg.getProperty(Constants.TO) == null) {
+            outboundRequestMsg.setProperty(Constants.TO, "");
         }
+        return (String) outboundRequestMsg.getProperty(Constants.TO);
+    }
+
+    private static HttpVersion getHttpVersion(HTTPCarbonMessage outboundRequestMsg) {
+        HttpVersion httpVersion;
+        if (null != outboundRequestMsg.getProperty(Constants.HTTP_VERSION)) {
+            httpVersion = new HttpVersion((String) outboundRequestMsg.getProperty(Constants.HTTP_VERSION), true);
+        } else {
+            httpVersion = new HttpVersion(Constants.DEFAULT_VERSION_HTTP_1_1, true);
+        }
+        return httpVersion;
+    }
+
+    private static HttpMethod getHttpMethod(HTTPCarbonMessage outboundRequestMsg) {
+        HttpMethod httpMethod;
+        if (null != outboundRequestMsg.getProperty(Constants.HTTP_METHOD)) {
+            httpMethod = new HttpMethod((String) outboundRequestMsg.getProperty(Constants.HTTP_METHOD));
+        } else {
+            httpMethod = new HttpMethod(Constants.HTTP_POST_METHOD);
+        }
+        return httpMethod;
     }
 
     /**
      * Prepare request message with Transfer-Encoding/Content-Length
      *
      * @param httpOutboundRequest HTTPCarbonMessage
+     * @param chunkEnabled Specifies whether chunking is enabled or disabled
      */
-    public static void setupTransferEncodingForRequest(HTTPCarbonMessage httpOutboundRequest, boolean chunkDisabled) {
-        if (chunkDisabled) {
-            httpOutboundRequest.removeHeader(Constants.HTTP_TRANSFER_ENCODING);
-            setContentLength(httpOutboundRequest);
-        } else {
+    public static void setupChunkedOrContentLengthForReq(HTTPCarbonMessage httpOutboundRequest, boolean chunkEnabled) {
+        if (chunkEnabled) {
             httpOutboundRequest.removeHeader(Constants.HTTP_CONTENT_LENGTH);
             setTransferEncodingHeader(httpOutboundRequest);
+        } else {
+            httpOutboundRequest.removeHeader(Constants.HTTP_TRANSFER_ENCODING);
+            setContentLength(httpOutboundRequest);
+        }
+    }
+
+    public static void setupChunkedRequest(HTTPCarbonMessage httpOutboundRequest) {
+        httpOutboundRequest.removeHeader(Constants.HTTP_CONTENT_LENGTH);
+        setTransferEncodingHeader(httpOutboundRequest);
+    }
+
+    public static void setupContentLengthRequest(HTTPCarbonMessage httpOutboundRequest, int contentLength) {
+        httpOutboundRequest.removeHeader(Constants.HTTP_TRANSFER_ENCODING);
+        if (httpOutboundRequest.getHeader(Constants.HTTP_CONTENT_LENGTH) == null) {
+            httpOutboundRequest.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
         }
     }
 
@@ -181,6 +175,17 @@ public class Util {
     public static boolean isEntityBodyAllowed(String method) {
         return method.equals(Constants.HTTP_POST_METHOD) || method.equals(Constants.HTTP_PUT_METHOD)
                 || method.equals(Constants.HTTP_PATCH_METHOD);
+    }
+
+    /**
+     * Returns the status of chunking compatibility with http version.
+     *
+     * @param httpVersion http version string.
+     * @return  boolean value of status.
+     */
+    public static boolean isVersionCompatibleForChunking(String httpVersion) {
+        String version = new HttpVersion(httpVersion, true).text();
+        return version.equals(Constants.DEFAULT_VERSION_HTTP_1_1) || version.equals(Constants.HTTP_VERSION_2_0);
     }
 
     /**
@@ -207,7 +212,7 @@ public class Util {
         // 2. Check for transfer encoding header is set in the request
         // As per RFC 2616, Section 4.4, Content-Length must be ignored if Transfer-Encoding header
         // is present and its value not equal to 'identity'
-        String requestTransferEncodingHeader = requestDataHolder.getTransferEncodingHeader();
+        String requestTransferEncodingHeader = requestDataHolder.getTransferEncodingHeaderValue();
         if (requestTransferEncodingHeader != null &&
             !Constants.HTTP_TRANSFER_ENCODING_IDENTITY.equalsIgnoreCase(requestTransferEncodingHeader)) {
             outboundResMsg.setHeader(Constants.HTTP_TRANSFER_ENCODING, requestTransferEncodingHeader);
@@ -216,7 +221,7 @@ public class Util {
         }
 
         // 3. Check for request Content-Length header
-        String requestContentLength = requestDataHolder.getContentLengthHeader();
+        String requestContentLength = requestDataHolder.getContentLengthHeaderValue();
         if (requestContentLength != null &&
             (outboundResMsg.getHeader(Constants.HTTP_CONTENT_LENGTH) == null)) {
             int contentLength = outboundResMsg.getFullMessageLength();
@@ -234,6 +239,27 @@ public class Util {
             int contentLength = outboundResMsg.getFullMessageLength();
             outboundResMsg.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
         }
+    }
+
+    public static boolean isChunkedOutboundResponse(HTTPCarbonMessage outboundResMsg,
+            RequestDataHolder requestDataHolder) {
+        // 2. Check for transfer encoding header is set in the request
+        // As per RFC 2616, Section 4.4, Content-Length must be ignored if Transfer-Encoding header
+        // is present and its value not equal to 'identity'
+        String inboundReqTransferEncodingHeaderValue = requestDataHolder.getTransferEncodingHeaderValue();
+        if (inboundReqTransferEncodingHeaderValue != null &&
+                !Constants.HTTP_TRANSFER_ENCODING_IDENTITY.equalsIgnoreCase(inboundReqTransferEncodingHeaderValue)) {
+            return true;
+        }
+
+        // 3. Check for request Content-Length header
+        String requestContentLength = requestDataHolder.getContentLengthHeaderValue();
+        if (requestContentLength != null) {
+            return false;
+        }
+
+        // 4. If request doesn't have Transfer-Encoding or Content-Length header look for response properties
+        return outboundResMsg.getHeader(Constants.HTTP_TRANSFER_ENCODING) != null;
     }
 
     public static SSLConfig getSSLConfigForListener(String certPass, String keyStorePass, String keyStoreFilePath,

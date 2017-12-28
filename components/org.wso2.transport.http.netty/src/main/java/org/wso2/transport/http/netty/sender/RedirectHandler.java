@@ -69,26 +69,26 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
     private boolean httpTraceLogEnabled;
     private int maxRedirectCount;
     private Integer currentRedirectCount;
-    private boolean chunkDisabled;
+    private boolean chunkEnabled;
     private HTTPCarbonMessage targetRespMsg;
     private ChannelHandlerContext originalChannelContext;
     private boolean isIdleHandlerOfTargetChannelRemoved = false;
 
     public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount
-            , boolean chunkDisabled) {
+            , boolean chunkEnabled) {
         this.sslEngine = sslEngine;
         this.httpTraceLogEnabled = httpTraceLogEnabled;
         this.maxRedirectCount = maxRedirectCount;
-        this.chunkDisabled = chunkDisabled;
+        this.chunkEnabled = chunkEnabled;
     }
 
     public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount
-            , boolean chunkDisabled, ChannelHandlerContext originalChannelContext
+            , boolean chunkEnabled, ChannelHandlerContext originalChannelContext
             , boolean isIdleHandlerOfTargetChannelRemoved) {
         this.sslEngine = sslEngine;
         this.httpTraceLogEnabled = httpTraceLogEnabled;
         this.maxRedirectCount = maxRedirectCount;
-        this.chunkDisabled = chunkDisabled;
+        this.chunkEnabled = chunkEnabled;
         this.originalChannelContext = originalChannelContext;
         this.isIdleHandlerOfTargetChannelRemoved = isIdleHandlerOfTargetChannelRemoved;
     }
@@ -130,10 +130,9 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
      *
      * @param ctx   Channel context
      * @param cause Exception occurred
-     * @throws Exception
      */
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOG.error("Exception occurred in RedirectHandler.", cause);
         if (ctx != null && ctx.channel().isActive()) {
             if (LOG.isDebugEnabled()) {
@@ -150,10 +149,9 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
      *
      * @param ctx Channel context
      * @param evt Event
-     * @throws Exception
      */
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.READER_IDLE || event.state() == IdleState.WRITER_IDLE) {
@@ -272,7 +270,6 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 }
                 URL locationUrl = new URL(redirectState.get(Constants.LOCATION));
                 HTTPCarbonMessage httpCarbonRequest = createHttpCarbonRequest();
-                Util.setupTransferEncodingForRequest(httpCarbonRequest, chunkDisabled);
                 HttpRequest httpRequest = Util.createHttpRequest(httpCarbonRequest);
 
                 if (isCrossDoamin) {
@@ -666,7 +663,7 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 new InetSocketAddress(redirectUrl.getHost(), redirectUrl.getPort() != -1 ?
                         redirectUrl.getPort() :
                         getDefaultPort(redirectUrl.getProtocol()))).handler(
-                new RedirectChannelInitializer(sslEngine, httpTraceLogEnabled, maxRedirectCount, chunkDisabled
+                new RedirectChannelInitializer(sslEngine, httpTraceLogEnabled, maxRedirectCount, chunkEnabled
                         , originalChannelContext, isIdleHandlerOfTargetChannelRemoved));
         clientBootstrap.option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000);
         ChannelFuture channelFuture = clientBootstrap.connect();
@@ -683,39 +680,36 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
      */
     private void registerListener(ChannelHandlerContext channelHandlerContext, ChannelFuture channelFuture,
             HTTPCarbonMessage httpCarbonRequest, HttpRequest httpRequest) {
-        channelFuture.addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (future.isSuccess() && future.isDone()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Connected to the new channel " + future.channel().id() + " and getting ready to "
-                                + "write request.");
-                    }
-                    long channelStartTime = channelHandlerContext.channel().attr(Constants.ORIGINAL_CHANNEL_START_TIME)
-                            .get();
-                    int timeoutOfOriginalRequest = channelHandlerContext.channel()
-                            .attr(Constants.ORIGINAL_CHANNEL_TIMEOUT).get();
-                    setChannelAttributes(channelHandlerContext, future, httpCarbonRequest, channelStartTime,
-                            timeoutOfOriginalRequest);
-                    long remainingTimeForRedirection = getRemainingTimeForRedirection(channelStartTime,
-                            timeoutOfOriginalRequest);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Remaining time for redirection is : " + remainingTimeForRedirection);
-                    }
-                    future.channel().pipeline().addBefore(Constants.REDIRECT_HANDLER, Constants.IDLE_STATE_HANDLER,
-                            new IdleStateHandler(remainingTimeForRedirection, remainingTimeForRedirection, 0,
-                                    TimeUnit.MILLISECONDS));
-                    future.channel().write(httpRequest);
-                    future.channel().writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-                    /* if the previous channel is not original channel, closes it after sending the request through
-                     new channel*/
-                    if (channelHandlerContext != originalChannelContext) {
-                        channelHandlerContext.close();
-                    }
-                } else {
-                    LOG.error("Error occurred while trying to connect to redirect channel.", future.cause());
-                    exceptionCaught(channelHandlerContext, future.cause());
+        channelFuture.addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess() && future.isDone()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Connected to the new channel " + future.channel().id() + " and getting ready to "
+                            + "write request.");
                 }
+                long channelStartTime = channelHandlerContext.channel().attr(Constants.ORIGINAL_CHANNEL_START_TIME)
+                        .get();
+                int timeoutOfOriginalRequest = channelHandlerContext.channel()
+                        .attr(Constants.ORIGINAL_CHANNEL_TIMEOUT).get();
+                setChannelAttributes(channelHandlerContext, future, httpCarbonRequest, channelStartTime,
+                        timeoutOfOriginalRequest);
+                long remainingTimeForRedirection = getRemainingTimeForRedirection(channelStartTime,
+                        timeoutOfOriginalRequest);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Remaining time for redirection is : " + remainingTimeForRedirection);
+                }
+                future.channel().pipeline().addBefore(Constants.REDIRECT_HANDLER, Constants.IDLE_STATE_HANDLER,
+                        new IdleStateHandler(remainingTimeForRedirection, remainingTimeForRedirection, 0,
+                                TimeUnit.MILLISECONDS));
+                future.channel().write(httpRequest);
+                future.channel().writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+                /* if the previous channel is not original channel, closes it after sending the request through
+                 new channel*/
+                if (channelHandlerContext != originalChannelContext) {
+                    channelHandlerContext.close();
+                }
+            } else {
+                LOG.error("Error occurred while trying to connect to redirect channel.", future.cause());
+                exceptionCaught(channelHandlerContext, future.cause());
             }
         });
     }

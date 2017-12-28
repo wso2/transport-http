@@ -212,6 +212,7 @@ public final class Constants {
     public static final String MESSAGE_PROCESSOR_ID = "MESSAGE_PROCESSOR_ID";
 
     public static final String SRC_HANDLER = "SRC_HANDLER";
+    public static final String DEFAULT_VERSION_HTTP_1_1 = "HTTP/1.1";
 
     //Server Connection Related Parameters
     public static final String LOCAL_ADDRESS = "LOCAL_ADDRESS";
@@ -255,7 +256,7 @@ public final class Constants {
 
     // HTTP2 Related Parameters
     public static final String UPGRADE_RESPONSE_HEADER = "http-to-http2-upgrade";
-    public static final String HTTP2_VERSION = "HTTP/2.0";
+    public static final String HTTP_VERSION_2_0 = "HTTP/2.0";
     public static final String STREAM_ID = "STREAM_ID";
 //    public static final String SCHEME = "SCHEME";
     public static final String AUTHORITY = "AUTHORITY";
@@ -272,21 +273,21 @@ public final class Constants {
     public static final String HTTP_TRACE_LOG_HANDLER = "http-trace-logger";
     public static final String WEBSOCKET_SERVER_HANDSHAKE_HANDLER = "websocket-server-handshake-handler";
 
-    public static final AttributeKey<Integer> REDIRECT_COUNT = AttributeKey.<Integer>valueOf
+    public static final AttributeKey<Integer> REDIRECT_COUNT = AttributeKey.valueOf
             ("REDIRECT_COUNT");
-    public static final AttributeKey<HTTPCarbonMessage> ORIGINAL_REQUEST = AttributeKey.<HTTPCarbonMessage>valueOf
+    public static final AttributeKey<HTTPCarbonMessage> ORIGINAL_REQUEST = AttributeKey.valueOf
             ("ORIGINAL_REQUEST");
     public static final AttributeKey<HttpResponseFuture> RESPONSE_FUTURE_OF_ORIGINAL_CHANNEL = AttributeKey
-            .<HttpResponseFuture>valueOf
+            .valueOf
             ("RESPONSE_FUTURE_OF_ORIGINAL_CHANNEL");
     public static final AttributeKey<Long> ORIGINAL_CHANNEL_START_TIME = AttributeKey
-            .<Long>valueOf
+            .valueOf
                     ("ORIGINAL_CHANNEL_START_TIME");
     public static final AttributeKey<Integer> ORIGINAL_CHANNEL_TIMEOUT = AttributeKey
-            .<Integer>valueOf
+            .valueOf
                     ("ORIGINAL_CHANNEL_TIMEOUT");
     public static final AttributeKey<TargetChannel> TARGET_CHANNEL_REFERENCE = AttributeKey
-            .<TargetChannel>valueOf
+            .valueOf
                     ("TARGET_CHANNEL_REFERENCE");
 
     public static final String UTF8 = "UTF-8";
