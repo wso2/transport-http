@@ -69,26 +69,26 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
     private boolean httpTraceLogEnabled;
     private int maxRedirectCount;
     private Integer currentRedirectCount;
-    private boolean chunkDisabled;
+    private boolean chunkEnabled;
     private HTTPCarbonMessage targetRespMsg;
     private ChannelHandlerContext originalChannelContext;
     private boolean isIdleHandlerOfTargetChannelRemoved = false;
 
     public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount
-            , boolean chunkDisabled) {
+            , boolean chunkEnabled) {
         this.sslEngine = sslEngine;
         this.httpTraceLogEnabled = httpTraceLogEnabled;
         this.maxRedirectCount = maxRedirectCount;
-        this.chunkDisabled = chunkDisabled;
+        this.chunkEnabled = chunkEnabled;
     }
 
     public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount
-            , boolean chunkDisabled, ChannelHandlerContext originalChannelContext
+            , boolean chunkEnabled, ChannelHandlerContext originalChannelContext
             , boolean isIdleHandlerOfTargetChannelRemoved) {
         this.sslEngine = sslEngine;
         this.httpTraceLogEnabled = httpTraceLogEnabled;
         this.maxRedirectCount = maxRedirectCount;
-        this.chunkDisabled = chunkDisabled;
+        this.chunkEnabled = chunkEnabled;
         this.originalChannelContext = originalChannelContext;
         this.isIdleHandlerOfTargetChannelRemoved = isIdleHandlerOfTargetChannelRemoved;
     }
@@ -130,10 +130,9 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
      *
      * @param ctx   Channel context
      * @param cause Exception occurred
-     * @throws Exception
      */
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOG.error("Exception occurred in RedirectHandler.", cause);
         if (ctx != null && ctx.channel().isActive()) {
             if (LOG.isDebugEnabled()) {
@@ -150,10 +149,9 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
      *
      * @param ctx Channel context
      * @param evt Event
-     * @throws Exception
      */
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.READER_IDLE || event.state() == IdleState.WRITER_IDLE) {
@@ -665,7 +663,7 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 new InetSocketAddress(redirectUrl.getHost(), redirectUrl.getPort() != -1 ?
                         redirectUrl.getPort() :
                         getDefaultPort(redirectUrl.getProtocol()))).handler(
-                new RedirectChannelInitializer(sslEngine, httpTraceLogEnabled, maxRedirectCount, chunkDisabled
+                new RedirectChannelInitializer(sslEngine, httpTraceLogEnabled, maxRedirectCount, chunkEnabled
                         , originalChannelContext, isIdleHandlerOfTargetChannelRemoved));
         clientBootstrap.option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000);
         ChannelFuture channelFuture = clientBootstrap.connect();
