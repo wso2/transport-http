@@ -110,9 +110,9 @@ public class WebSocketServerHandshakeHandler extends ChannelInboundHandlerAdapte
         WebSocketSourceHandler webSocketSourceHandler =
                 new WebSocketSourceHandler(serverConnectorFuture, isSecured, channelSession, httpRequest,
                                            headers, ctx, interfaceId);
+
         WebSocketInitMessageImpl initMessage = new WebSocketInitMessageImpl(ctx, httpRequest, webSocketSourceHandler,
                                                                             headers);
-
         // Setting common properties for init message
         initMessage.setChannelSession(channelSession);
         initMessage.setIsServerMessage(true);
@@ -120,7 +120,6 @@ public class WebSocketServerHandshakeHandler extends ChannelInboundHandlerAdapte
         initMessage.setListenerInterface(interfaceId);
         initMessage.setProperty(Constants.SRC_HANDLER, webSocketSourceHandler);
         initMessage.setIsConnectionSecured(isSecured);
-
         serverConnectorFuture.notifyWSListener(initMessage);
     }
 }

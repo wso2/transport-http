@@ -22,8 +22,8 @@ package org.wso2.transport.http.netty.websocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
 import org.wso2.transport.http.netty.contract.HttpWsConnectorFactory;
-import org.wso2.transport.http.netty.contract.websocket.HandshakeFuture;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeListener;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketBinaryMessage;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnector;
@@ -37,6 +37,8 @@ import org.wso2.transport.http.netty.contractimpl.HttpWsConnectorFactoryImpl;
 import org.wso2.transport.http.netty.util.TestUtil;
 
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.websocket.Session;
 
 /**
@@ -56,36 +58,52 @@ public class WebSocketPassthroughServerConnectorListener implements WebSocketCon
         configuration.setTarget("myService");
         WebSocketClientConnector clientConnector = connectorFactory.createWsClientConnector(configuration);
         WebSocketConnectorListener clientConnectorListener = new WebSocketPassthroughClientConnectorListener();
+        Semaphore semaphore = new Semaphore(0);
+        AtomicReference<Session> atomicClientSession = new AtomicReference<>();
+        atomicClientSession.set(null);
+        clientConnector.connect(clientConnectorListener).setHandshakeListener(new HandshakeListener() {
+            @Override
+            public void onSuccess(HandshakeCompleter clientHandshakeCompleter) {
+                clientHandshakeCompleter.startListeningForFrames();
+                atomicClientSession.set(clientHandshakeCompleter.getSession());
+                semaphore.release();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                initMessage.cancelHandShake(1001, t.getMessage());
+                Assert.assertTrue(false, t.getMessage());
+                semaphore.release();
+            }
+        });
 
         try {
-            clientConnector.connect(clientConnectorListener).setHandshakeListener(new HandshakeListener() {
-                @Override
-                public void onSuccess(Session clientSession) {
-                    HandshakeFuture serverFuture = initMessage.handshake();
-                    serverFuture.setHandshakeListener(new HandshakeListener() {
-                        @Override
-                        public void onSuccess(Session serverSession) {
-                            WebSocketPassThroughTestSessionManager.getInstance().
-                                    interRelateSessions(serverSession, clientSession);
-                        }
-
-                        @Override
-                        public void onError(Throwable t) {
-                            logger.error(t.getMessage());
-                            Assert.assertTrue(false, "Error: " + t.getMessage());
-                        }
-                    });
-                }
-
-                @Override
-                public void onError(Throwable t) {
-                    Assert.assertTrue(false, t.getMessage());
-                }
-            }).sync();
+            semaphore.acquire();
         } catch (InterruptedException e) {
             Assert.assertTrue(false, e.getMessage());
         }
+
+        if (initMessage.isCancelled()) {
+            return;
+        }
+
+        initMessage.handshake().setHandshakeListener(new HandshakeListener() {
+            @Override
+            public void onSuccess(HandshakeCompleter serverHandshakeCompleter) {
+                WebSocketPassThroughTestSessionManager.getInstance().
+                        interRelateSessions(serverHandshakeCompleter.getSession(),
+                                            atomicClientSession.get());
+                serverHandshakeCompleter.startListeningForFrames();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                logger.error(t.getMessage());
+                Assert.assertTrue(false, "Error: " + t.getMessage());
+            }
+        });
     }
+
 
     @Override
     public void onMessage(WebSocketTextMessage textMessage) {
@@ -127,7 +145,6 @@ public class WebSocketPassthroughServerConnectorListener implements WebSocketCon
 
     @Override
     public void onError(Throwable throwable) {
-
     }
 
     @Override

@@ -22,6 +22,8 @@ package org.wso2.transport.http.netty.websocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
+import org.wso2.transport.http.netty.contract.websocket.HandshakeListener;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketBinaryMessage;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketCloseMessage;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketConnectorListener;
@@ -48,7 +50,17 @@ public class WebSocketMessagePropertiesConnectorListener implements WebSocketCon
         Assert.assertEquals(initMessage.getHeader("message-sender"), "wso2");
         if ("true".equals(checkSubProtocol)) {
             String[] subProtocols = {"xml"};
-            initMessage.handshake(subProtocols, true);
+            initMessage.handshake(subProtocols, true).setHandshakeListener(new HandshakeListener() {
+                @Override
+                public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                    handshakeCompleter.startListeningForFrames();
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    Assert.assertTrue(false, t.getMessage());
+                }
+            });
         }
 
     }

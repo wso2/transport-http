@@ -19,8 +19,6 @@
 
 package org.wso2.transport.http.netty.websocket;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -45,10 +43,6 @@ import javax.net.ssl.SSLException;
  * Test cases for WebSocket pass-through scenarios.
  */
 public class WebSocketPassThroughTestCase {
-
-    private static final Logger log = LoggerFactory.getLogger(WebSocketPassThroughTestCase.class);
-
-    private final int latchCountDownInSecs = 10;
 
     private HttpWsConnectorFactoryImpl httpConnectorFactory = new HttpWsConnectorFactoryImpl();
     private WebSocketRemoteServer remoteServer = new WebSocketRemoteServer(TestUtil.REMOTE_WS_SERVER_PORT);
@@ -75,6 +69,7 @@ public class WebSocketPassThroughTestCase {
         webSocketClient.handhshake();
         String text = "hello-pass-through";
         webSocketClient.sendText(text);
+        int latchCountDownInSecs = 10;
         latch.await(latchCountDownInSecs, TimeUnit.SECONDS);
         Assert.assertEquals(webSocketClient.getTextReceived(), text);
     }

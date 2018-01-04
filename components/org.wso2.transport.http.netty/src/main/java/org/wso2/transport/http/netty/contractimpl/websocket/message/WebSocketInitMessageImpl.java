@@ -21,25 +21,22 @@ package org.wso2.transport.http.netty.contractimpl.websocket.message;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
-import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import org.wso2.transport.http.netty.common.Constants;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeFuture;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketInitMessage;
 import org.wso2.transport.http.netty.contractimpl.websocket.HandshakeFutureImpl;
+import org.wso2.transport.http.netty.contractimpl.websocket.ServerHandshakeCompleterImpl;
 import org.wso2.transport.http.netty.contractimpl.websocket.WebSocketMessageImpl;
 import org.wso2.transport.http.netty.internal.websocket.WebSocketSessionImpl;
 import org.wso2.transport.http.netty.internal.websocket.WebSocketUtil;
 import org.wso2.transport.http.netty.listener.WebSocketSourceHandler;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of {@link WebSocketInitMessage}.
@@ -117,30 +114,20 @@ public class WebSocketInitMessageImpl extends WebSocketMessageImpl implements We
         try {
             ChannelFuture future = handshaker.handshake(ctx.channel(), httpRequest);
             handshakeFuture.setChannelFuture(future);
-            future.addListener(new GenericFutureListener<Future<? super Void>>() {
-                @Override
-                public void operationComplete(Future<? super Void> future) throws Exception {
+            future.addListener(nettyHandshakeFuture -> {
+                if (nettyHandshakeFuture.cause() != null) {
+                    handshakeFuture.notifyError(nettyHandshakeFuture.cause());
+                } else {
                     String selectedSubProtocol = handshaker.selectedSubprotocol();
                     webSocketSourceHandler.setNegotiatedSubProtocol(selectedSubProtocol);
                     setSubProtocol(selectedSubProtocol);
                     WebSocketSessionImpl session = (WebSocketSessionImpl) getChannelSession();
                     session.setIsOpen(true);
                     session.setNegotiatedSubProtocol(selectedSubProtocol);
-
-                    //Replace HTTP handlers  with  new Handlers for WebSocket in the pipeline
-                    ChannelPipeline pipeline = ctx.pipeline();
-
-                    if (idleTimeout > 0) {
-                        pipeline.replace(Constants.IDLE_STATE_HANDLER, Constants.IDLE_STATE_HANDLER,
-                                         new IdleStateHandler(idleTimeout, idleTimeout, idleTimeout,
-                                                              TimeUnit.MILLISECONDS));
-                    } else {
-                        pipeline.remove(Constants.IDLE_STATE_HANDLER);
-                    }
-                    pipeline.addLast(Constants.WEBSOCKET_SOURCE_HANDLER, webSocketSourceHandler);
-                    pipeline.remove(Constants.HTTP_SOURCE_HANDLER);
                     setProperty(Constants.SRC_HANDLER, webSocketSourceHandler);
-                    handshakeFuture.notifySuccess(webSocketSourceHandler.getChannelSession());
+                    HandshakeCompleter handshakeCompleter =
+                            new ServerHandshakeCompleterImpl(session, ctx, webSocketSourceHandler, idleTimeout);
+                    handshakeFuture.notifySuccess(handshakeCompleter);
                 }
             });
             return handshakeFuture;

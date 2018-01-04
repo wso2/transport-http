@@ -55,7 +55,7 @@ public interface EntityCollector {
 
     /**
      * Get the full message body
-     * @return complete message body
+     * @return startListeningForFrames message body
      */
     List<ByteBuffer> getFullMessageBody();
 

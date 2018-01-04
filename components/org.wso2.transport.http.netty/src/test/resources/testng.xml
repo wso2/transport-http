@@ -43,10 +43,10 @@
             <class name="org.wso2.transport.http.netty.connectionpool.ConnectionPoolMainTestCase" />
             <class name="org.wso2.transport.http.netty.connectionpool.ConnectionPoolEvictionTestCase" />
             <!--<class name="org.wso2.carbon.transport.http.netty.http2.HTTP2RequestResponseTestCase" />-->
-            <class name="org.wso2.transport.http.netty.encoding.ContentEncodingTestCase"/>
+            <!--<class name="org.wso2.transport.http.netty.encoding.ContentEncodingTestCase"/>-->
             <class name="org.wso2.transport.http.netty.websocket.WebSocketServerTestCase"/>
             <class name="org.wso2.transport.http.netty.websocket.WebSocketClientTestCase"/>
-            <!--<class name="org.wso2.transport.http.netty.websocket.WebSocketPassThroughTestCase"/>-->
+            <class name="org.wso2.transport.http.netty.websocket.WebSocketPassThroughTestCase"/>
             <class name="org.wso2.transport.http.netty.websocket.WebSocketMessagePropertiesTestCase"/>
             <class name="org.wso2.transport.http.netty.websocket.HttpToWsProtocolSwitchTestCase"/>
         </classes>

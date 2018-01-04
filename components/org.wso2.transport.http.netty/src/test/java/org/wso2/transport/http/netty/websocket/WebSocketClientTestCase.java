@@ -27,6 +27,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
+import org.wso2.transport.http.netty.contract.HandshakeCompleter;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeFuture;
 import org.wso2.transport.http.netty.contract.websocket.HandshakeListener;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnector;
@@ -74,9 +75,10 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFuture = handshake(connectorListener);
         handshakeFuture.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 try {
-                    session.getBasicRemote().sendText(textSent);
+                    handshakeCompleter.getSession().getBasicRemote().sendText(textSent);
                 } catch (IOException e) {
                     log.error(e.getMessage());
                     Assert.assertTrue(false, e.getMessage());
@@ -104,9 +106,10 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFuture = handshake(connectorListener);
         handshakeFuture.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 try {
-                    session.getBasicRemote().sendBinary(bufferSent);
+                    handshakeCompleter.getSession().getBasicRemote().sendBinary(bufferSent);
                 } catch (IOException e) {
                     log.error(e.getMessage());
                     Assert.assertTrue(false, e.getMessage());
@@ -134,9 +137,10 @@ public class WebSocketClientTestCase {
         HandshakeFuture pingHandshakeFuture = handshake(pingConnectorListener);
         pingHandshakeFuture.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 try {
-                    session.getBasicRemote().sendText(PING);
+                    handshakeCompleter.getSession().getBasicRemote().sendText(PING);
                 } catch (IOException e) {
                     log.error(e.getMessage());
                     Assert.assertTrue(false, e.getMessage());
@@ -159,11 +163,12 @@ public class WebSocketClientTestCase {
         HandshakeFuture pongHandshakeFuture = handshake(pongConnectorListener);
         pongHandshakeFuture.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 try {
                     byte[] bytes = {1, 2, 3, 4, 5};
                     ByteBuffer buffer = ByteBuffer.wrap(bytes);
-                    session.getBasicRemote().sendPing(buffer);
+                    handshakeCompleter.getSession().getBasicRemote().sendPing(buffer);
                 } catch (IOException e) {
                     log.error(e.getMessage());
                     Assert.assertTrue(false, e.getMessage());
@@ -188,9 +193,10 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFuture1 = handshake(connectorListener1);
         handshakeFuture1.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 try {
-                    session.getBasicRemote().sendText(textsSent[0]);
+                    handshakeCompleter.getSession().getBasicRemote().sendText(textsSent[0]);
                 } catch (IOException e) {
                     log.error(e.getMessage());
                     Assert.assertTrue(false, e.getMessage());
@@ -212,10 +218,11 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFuture2 = handshake(connectorListener2);
         handshakeFuture2.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 try {
                     for (int i = 0; i < textsSent.length; i++) {
-                        session.getBasicRemote().sendText(textsSent[i]);
+                        handshakeCompleter.getSession().getBasicRemote().sendText(textsSent[i]);
                     }
                 } catch (IOException e) {
                     log.error(e.getMessage());
@@ -246,7 +253,8 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFuture = handshake(connectorListener);
         handshakeFuture.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
             }
 
             @Override
@@ -273,8 +281,9 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFutureSuccess = handshake(connectorListenerSuccess);
         handshakeFutureSuccess.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
-                Assert.assertEquals(session.getNegotiatedSubprotocol(), "json");
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
+                Assert.assertEquals(handshakeCompleter.getSession().getNegotiatedSubprotocol(), "json");
                 latchSuccess.countDown();
             }
 
@@ -297,7 +306,8 @@ public class WebSocketClientTestCase {
         HandshakeFuture handshakeFutureFail = handshake(connectorListenerFail);
         handshakeFutureFail.setHandshakeListener(new HandshakeListener() {
             @Override
-            public void onSuccess(Session session) {
+            public void onSuccess(HandshakeCompleter handshakeCompleter) {
+                handshakeCompleter.startListeningForFrames();
                 Assert.assertFalse(true, "Should not negotiate");
                 latchFail.countDown();
             }
