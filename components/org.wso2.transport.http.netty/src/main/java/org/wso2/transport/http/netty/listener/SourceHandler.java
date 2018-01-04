@@ -42,6 +42,7 @@ import org.wso2.transport.http.netty.internal.HTTPTransportContextHolder;
 import org.wso2.transport.http.netty.internal.HandlerExecutor;
 import org.wso2.transport.http.netty.message.HTTPCarbonMessage;
 import org.wso2.transport.http.netty.message.HttpCarbonRequest;
+import org.wso2.transport.http.netty.message.PooledDataStreamerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
@@ -92,17 +93,16 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
 
         if (msg instanceof FullHttpMessage) {
             FullHttpMessage fullHttpMessage = (FullHttpMessage) msg;
-            sourceReqCmsg = setupCarbonMessage(fullHttpMessage);
+            sourceReqCmsg = setupCarbonMessage(fullHttpMessage, ctx);
             notifyRequestListener(sourceReqCmsg, ctx);
             ByteBuf content = ((FullHttpMessage) msg).content();
             sourceReqCmsg.addHttpContent(new DefaultLastHttpContent(content));
             if (handlerExecutor != null) {
                 handlerExecutor.executeAtSourceRequestSending(sourceReqCmsg);
             }
-
         } else if (msg instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) msg;
-            sourceReqCmsg = setupCarbonMessage(httpRequest);
+            sourceReqCmsg = setupCarbonMessage(httpRequest, ctx);
             notifyRequestListener(sourceReqCmsg, ctx);
         } else {
             if (sourceReqCmsg != null) {
@@ -191,13 +191,15 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         serverConnectorFuture.notifyErrorListener(cause);
     }
 
-    private HTTPCarbonMessage setupCarbonMessage(HttpMessage httpMessage) throws URISyntaxException {
+    private HTTPCarbonMessage setupCarbonMessage(HttpMessage httpMessage, ChannelHandlerContext ctx)
+            throws URISyntaxException {
 
         if (handlerExecutor != null) {
             handlerExecutor.executeAtSourceRequestReceiving(sourceReqCmsg);
         }
 
         sourceReqCmsg = new HttpCarbonRequest((HttpRequest) httpMessage);
+        sourceReqCmsg.setProperty(Constants.POOLED_BYTE_BUFFER_FACTORY, new PooledDataStreamerFactory(ctx.alloc()));
 
         HttpRequest httpRequest = (HttpRequest) httpMessage;
         sourceReqCmsg.setProperty(Constants.CHNL_HNDLR_CTX, this.ctx);

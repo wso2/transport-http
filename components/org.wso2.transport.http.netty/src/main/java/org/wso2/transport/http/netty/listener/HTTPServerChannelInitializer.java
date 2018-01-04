@@ -107,7 +107,8 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
 
         try {
             pipeline.addLast(Constants.HTTP_SOURCE_HANDLER,
-                             new SourceHandler(this.serverConnectorFuture, this.interfaceId, this.chunkConfig));
+                             new SourceHandler(this.serverConnectorFuture, this.interfaceId,
+                                     this.chunkConfig));
         } catch (Exception e) {
             log.error("Cannot Create SourceHandler ", e);
         }

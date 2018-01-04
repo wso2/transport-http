@@ -55,7 +55,7 @@ public class ListenerConfiguration {
     @XmlAttribute(required = true)
     private int port = 8080;
 
-    private ChunkConfig chunkingConfig;
+    private ChunkConfig chunkingConfig = ChunkConfig.AUTO;
 
     @XmlAttribute
     private boolean bindOnStartup = false;

@@ -68,13 +68,13 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
             }
 
             boolean keepAlive = isKeepAlive(outboundResponseMsg);
-//            isChunked = Util.isChunkedOutboundResponse(outboundResponseMsg, requestDataHolder);
 
             outboundResponseMsg.getHttpContentAsync().setMessageListener(httpContent ->
                     this.sourceContext.channel().eventLoop().execute(() -> {
                 if (Util.isLastHttpContent(httpContent)) {
                     if (!isHeaderWritten) {
-                        if (chunkConfig == ChunkConfig.ENABLE) {
+                        if ((chunkConfig == ChunkConfig.ENABLE)
+                                && Util.isVersionCompatibleForChunking(requestDataHolder.getHttpVersion())) {
                             Util.setupChunkedRequest(outboundResponseMsg);
                         } else {
                             contentLength += httpContent.content().readableBytes();
@@ -109,7 +109,8 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
                     contentList.clear();
                     contentLength = 0;
                 } else {
-                    if (chunkConfig == ChunkConfig.ENABLE) {
+                    if ((chunkConfig == ChunkConfig.ENABLE || chunkConfig == ChunkConfig.AUTO)
+                            && Util.isVersionCompatibleForChunking(requestDataHolder.getHttpVersion())) {
                         if (!isHeaderWritten) {
                             Util.setupChunkedRequest(outboundResponseMsg);
                             writeOutboundResponseHeaders(outboundResponseMsg, keepAlive);

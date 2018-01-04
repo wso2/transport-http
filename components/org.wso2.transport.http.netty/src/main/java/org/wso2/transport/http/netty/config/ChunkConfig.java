@@ -25,5 +25,5 @@ package org.wso2.transport.http.netty.config;
 public enum ChunkConfig {
     ENABLE,
     DISABLE,
-    DEFAULT
+    AUTO
 }
