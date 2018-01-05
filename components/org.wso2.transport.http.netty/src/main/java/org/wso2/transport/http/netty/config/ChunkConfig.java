@@ -23,7 +23,7 @@ package org.wso2.transport.http.netty.config;
  * Contains value for configuring content encoding
  */
 public enum ChunkConfig {
-    ENABLE,
-    DISABLE,
+    ALWAYS,
+    NEVER,
     AUTO
 }

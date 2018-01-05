@@ -38,7 +38,7 @@ public class ChunkDisableClientTestCase extends ChunkClientTemplate {
 
     @BeforeClass
     public void setUp() {
-        senderConfiguration.setChunkingConfig(ChunkConfig.DISABLE);
+        senderConfiguration.setChunkingConfig(ChunkConfig.NEVER);
         super.setUp();
     }
 

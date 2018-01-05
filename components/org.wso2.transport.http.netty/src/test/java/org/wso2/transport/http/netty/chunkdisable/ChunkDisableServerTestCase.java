@@ -38,7 +38,7 @@ public class ChunkDisableServerTestCase extends ChunkServerTemplate {
 
     @BeforeClass
     public void setUp() {
-        listenerConfiguration.setChunkConfig(ChunkConfig.DISABLE);
+        listenerConfiguration.setChunkConfig(ChunkConfig.NEVER);
         super.setUp();
     }
 

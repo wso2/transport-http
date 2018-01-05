@@ -181,7 +181,7 @@ public class TargetChannel {
                 // this means we need to send an empty payload
                 // depending on the http verb
                 if (Util.isEntityBodyAllowed(getHttpMethod(httpOutboundRequest))) {
-                    if (chunkConfig == ChunkConfig.ENABLE && Util.isVersionCompatibleForChunking(httpVersion)) {
+                    if (chunkConfig == ChunkConfig.ALWAYS && Util.isVersionCompatibleForChunking(httpVersion)) {
                         Util.setupChunkedRequest(httpOutboundRequest);
                     } else {
                         contentLength += httpContent.content().readableBytes();
@@ -191,7 +191,7 @@ public class TargetChannel {
                 writeOutboundRequestHeaders(httpOutboundRequest);
             }
 
-            if (chunkConfig == ChunkConfig.DISABLE) {
+            if (chunkConfig == ChunkConfig.NEVER) {
                 for (HttpContent cachedHttpContent : contentList) {
                     this.getChannel().writeAndFlush(cachedHttpContent);
                 }
@@ -206,7 +206,7 @@ public class TargetChannel {
                 handlerExecutor.executeAtTargetRequestSending(httpOutboundRequest);
             }
         } else {
-            if ((chunkConfig == ChunkConfig.ENABLE || chunkConfig == ChunkConfig.AUTO)
+            if ((chunkConfig == ChunkConfig.ALWAYS || chunkConfig == ChunkConfig.AUTO)
                     && Util.isVersionCompatibleForChunking(httpVersion)) {
                 if (!this.isRequestWritten) {
                     Util.setupChunkedRequest(httpOutboundRequest);
