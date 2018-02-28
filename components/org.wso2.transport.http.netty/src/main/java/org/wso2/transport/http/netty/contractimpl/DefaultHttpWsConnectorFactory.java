@@ -28,6 +28,7 @@ import org.wso2.transport.http.netty.common.Constants;
 import org.wso2.transport.http.netty.common.Util;
 import org.wso2.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.transport.http.netty.config.SenderConfiguration;
+import org.wso2.transport.http.netty.contract.Http2ClientConnector;
 import org.wso2.transport.http.netty.contract.HttpClientConnector;
 import org.wso2.transport.http.netty.contract.HttpWsConnectorFactory;
 import org.wso2.transport.http.netty.contract.ServerConnector;
@@ -72,6 +73,7 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
             serverConnectorBootstrap.addCacheSize(listenerConfig.getCacheSize());
         }
         serverConnectorBootstrap.addIdleTimeout(listenerConfig.getSocketIdleTimeout(120000));
+        serverConnectorBootstrap.setHttp2Enabled(listenerConfig.isHttp2());
         serverConnectorBootstrap.addHttpTraceLogHandler(listenerConfig.isHttpTraceLogEnabled());
         serverConnectorBootstrap.addThreadPools(bossGroup, workerGroup);
         serverConnectorBootstrap.addHeaderAndEntitySizeValidation(listenerConfig.getRequestSizeValidationConfig());
@@ -90,6 +92,12 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
         ConnectionManager connectionManager = new ConnectionManager(senderConfiguration.getPoolConfiguration(),
                 bootstrapConfig, clientEventLoopGroup);
         return new HttpClientConnectorImpl(connectionManager, senderConfiguration);
+    }
+
+    @Override
+    public Http2ClientConnector createHttp2ClientConnector(
+            Map<String, Object> transportProperties, SenderConfiguration senderConfiguration) {
+        return new DefaultHttp2ClientConnector(senderConfiguration);
     }
 
     @Override
