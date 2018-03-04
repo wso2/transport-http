@@ -159,6 +159,15 @@ public class HTTPCarbonMessage {
     }
 
     /**
+     * Adds the user provided headers to the Carbon message. Duplicate headers are allowed.
+     *
+     * @param httpHeaders Set of headers to be added.
+     */
+    public void addHeaders(HttpHeaders httpHeaders) {
+        this.httpMessage.headers().add(httpHeaders);
+    }
+
+    /**
      * Remove the header using header name.
      *
      * @param key header name.
