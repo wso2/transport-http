@@ -64,9 +64,8 @@ public class HttpMessageDataStreamer {
     }
 
     /**
-     * A class which represents the InputStream of the ByteBuffers
-     * No need to worry about thread safety of this class this is called only once by
-     * for a message instance from one thread.
+     * A class which represents the InputStream of the ByteBuffers No need to worry about thread safety of this class
+     * this is called only once by for a message instance from one thread.
      */
     protected class ByteBufferInputStream extends InputStream {
 
@@ -113,12 +112,10 @@ public class HttpMessageDataStreamer {
     }
 
     /**
-     * A class which write byteStream into ByteBuffers and add those
-     * ByteBuffers to Content Queue.
-     * No need to worry about thread safety of this class this is called only once by
-     * one thread at particular time.
+     * A class which write byteStream into ByteBuffers and add those ByteBuffers to Content Queue. No need to worry
+     * about thread safety of this class this is called only once by one thread at particular time.
      */
-    protected class ByteBufferOutputStream extends OutputStream {
+    protected class ByteBufferOutputStream extends OutputStream     {
 
         private ByteBuf dataHolder;
 
@@ -188,6 +185,19 @@ public class HttpMessageDataStreamer {
                 } else if (contentEncodingHeader.equalsIgnoreCase(Constants.ENCODING_DEFLATE)) {
                     return new InflaterInputStream(createInputStreamIfNull());
                 } else {
+                    String[] headers = contentEncodingHeader.split(",");
+                    if (headers.length == 2) {
+                        if (headers[0].trim().equalsIgnoreCase(Constants.ENCODING_GZIP) &&
+                                headers[1].trim().equalsIgnoreCase(Constants.ENCODING_DEFLATE)) {
+                            InputStream inputStream = new InflaterInputStream(createInputStreamIfNull());
+                            return new GZIPInputStream(inputStream);
+                        } else if (headers[0].trim().equalsIgnoreCase(Constants.ENCODING_DEFLATE) &&
+                                headers[1].trim().equalsIgnoreCase(Constants.ENCODING_GZIP)) {
+                            InputStream inputStream = new GZIPInputStream(createInputStreamIfNull());
+                            return new InflaterInputStream(inputStream);
+                        }
+                    }
+
                     log.warn("Unknown Content-Encoding: " + contentEncodingHeader);
                 }
             } catch (IOException e) {
@@ -198,7 +208,7 @@ public class HttpMessageDataStreamer {
     }
 
     private ByteBuf getBuffer() {
-        if (pooledByteBufAllocator ==  null) {
+        if (pooledByteBufAllocator == null) {
             return Unpooled.buffer(contentBufferSize);
         } else {
             return pooledByteBufAllocator.directBuffer(contentBufferSize);
