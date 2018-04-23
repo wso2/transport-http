@@ -229,7 +229,7 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
     }
 
     private ChannelFuture writeAndFlush(HttpResponse fullOutboundResponse, String httpMethod) {
-        if (headRequest(httpMethod)) {
+        if (isHeadRequest(httpMethod)) {
             ((DefaultFullHttpResponse) fullOutboundResponse).release();
 
             CompositeByteBuf emptyContent = Unpooled.compositeBuffer();
@@ -254,14 +254,14 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
     }
 
     public void setChunkConfig(ChunkConfig chunkConfig) {
-        if (headRequest(requestDataHolder.getHttpMethod())) {
+        if (isHeadRequest(requestDataHolder.getHttpMethod())) {
             this.chunkConfig = ChunkConfig.NEVER;
         } else {
             this.chunkConfig = chunkConfig;
         }
     }
 
-    private boolean headRequest(String httpMethod) {
+    private boolean isHeadRequest(String httpMethod) {
         return httpMethod.equalsIgnoreCase(Constants.HTTP_HEAD_METHOD);
     }
 }

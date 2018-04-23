@@ -103,6 +103,18 @@ public class PassThroughHttpTestCase {
         }
     }
 
+    @Test
+    public void passthroughHeadTest() {
+        try {
+            HttpURLConnection urlConn = TestUtil.request(baseURI, "/", HttpMethod.HEAD.name(), true);
+            String content = TestUtil.getContent(urlConn);
+            assertEquals("", content);
+            urlConn.disconnect();
+        } catch (IOException e) {
+            TestUtil.handleException("IOException occurred while running passthroughHeadTest", e);
+        }
+    }
+
     @AfterClass
     public void cleanUp() throws ServerConnectorException {
         try {
