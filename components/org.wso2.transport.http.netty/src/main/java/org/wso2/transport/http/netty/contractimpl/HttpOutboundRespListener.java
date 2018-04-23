@@ -24,6 +24,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.LastHttpContent;
@@ -183,7 +186,7 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
                 serverName, keepAlive, allContent);
 
         headerWritten = true;
-        ChannelFuture outboundChannelFuture = sourceContext.writeAndFlush(fullOutboundResponse);
+        ChannelFuture outboundChannelFuture = writeAndFlush(fullOutboundResponse, requestDataHolder.getHttpMethod());
         Util.checkForResponseWriteStatus(inboundRequestMsg, outboundRespStatusFuture, outboundChannelFuture);
         return outboundChannelFuture;
     }
@@ -225,6 +228,22 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
         sourceContext.write(response);
     }
 
+    private ChannelFuture writeAndFlush(HttpResponse fullOutboundResponse, String httpMethod) {
+        if (headRequest(httpMethod)) {
+            ((DefaultFullHttpResponse) fullOutboundResponse).release();
+
+            CompositeByteBuf emptyContent = Unpooled.compositeBuffer();
+            emptyContent.addComponent(true, new DefaultLastHttpContent().content());
+
+            FullHttpResponse newHttpResponse = ((DefaultFullHttpResponse) fullOutboundResponse).replace(emptyContent);
+            ChannelFuture channelFuture = sourceContext.writeAndFlush(newHttpResponse);
+            sourceContext.close();
+
+            return channelFuture;
+        }
+        return sourceContext.writeAndFlush(fullOutboundResponse);
+    }
+
     @Override
     public void onError(Throwable throwable) {
         log.error("Couldn't send the outbound response", throwable);
@@ -235,6 +254,14 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
     }
 
     public void setChunkConfig(ChunkConfig chunkConfig) {
-        this.chunkConfig = chunkConfig;
+        if (headRequest(requestDataHolder.getHttpMethod())) {
+            this.chunkConfig = ChunkConfig.NEVER;
+        } else {
+            this.chunkConfig = chunkConfig;
+        }
+    }
+
+    private boolean headRequest(String httpMethod) {
+        return httpMethod.equalsIgnoreCase(Constants.HTTP_HEAD_METHOD);
     }
 }
