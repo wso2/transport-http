@@ -89,6 +89,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     private int cacheSize;
     private ChannelGroup allChannels;
     private boolean ocspStaplingEnabled = false;
+    private boolean proxy = false;
 
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -192,6 +193,9 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
             }
         }
         serverPipeline.addLast("uriLengthValidator", new UriAndHeaderLengthValidator(this.serverName));
+        if (proxy) {
+            serverPipeline.addLast("ProxyServerHandler", new ProxyServerFrontEndHandler());
+        }
         if (reqSizeValidationConfig.getMaxEntityBodySize() > -1) {
             serverPipeline.addLast("maxEntityBodyValidator", new MaxEntityBodyValidator(this.serverName,
                     reqSizeValidationConfig.getMaxEntityBodySize()));
@@ -312,6 +316,10 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
 
     void setOcspStaplingEnabled(boolean ocspStaplingEnabled) {
         this.ocspStaplingEnabled = ocspStaplingEnabled;
+    }
+
+    void setProxyEnabled(boolean proxy) {
+        this.proxy = proxy;
     }
 
     /**

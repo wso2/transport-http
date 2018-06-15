@@ -167,6 +167,10 @@ public class ServerConnectorBootstrap {
         httpServerChannelInitializer.setOcspStaplingEnabled(ocspStapling);
     }
 
+    public void addProxy(boolean proxy) {
+        httpServerChannelInitializer.setProxyEnabled(proxy);
+    }
+
     public void addChunkingBehaviour(ChunkConfig chunkConfig) {
         httpServerChannelInitializer.setChunkingConfig(chunkConfig);
     }

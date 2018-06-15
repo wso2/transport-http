@@ -203,10 +203,10 @@ public class DefaultHttpClientConnector implements HttpClientConnector {
                         // Response for the upgrade request will arrive in stream 1,
                         // so use 1 as the stream id.
                         prepareTargetChannelForHttp(channelFuture);
-                        if (protocol.equalsIgnoreCase(Constants.HTTP_SCHEME) &&
-                                senderConfiguration.getProxyServerConfiguration() != null) {
-                            httpOutboundRequest.setProperty(Constants.IS_PROXY_ENABLED, true);
-                        }
+//                        if (protocol.equalsIgnoreCase(Constants.HTTP_SCHEME) &&
+//                                senderConfiguration.getProxyServerConfiguration() != null) {
+//                            httpOutboundRequest.setProperty(Constants.IS_PROXY_ENABLED, true);
+//                        }
                         targetChannel.writeContent(httpOutboundRequest);
                     }
                 }

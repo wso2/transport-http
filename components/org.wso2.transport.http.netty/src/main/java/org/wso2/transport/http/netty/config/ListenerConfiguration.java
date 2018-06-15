@@ -120,6 +120,9 @@ public class ListenerConfiguration {
     @XmlAttribute
     private boolean ocspStaplingEnabled = false;
 
+    @XmlAttribute
+    private boolean proxy = false;
+
     @XmlElementWrapper(name = "parameters")
     @XmlElement(name = "parameter")
     private List<Parameter> parameters = getDefaultParameters();
@@ -277,6 +280,14 @@ public class ListenerConfiguration {
 
     public void setParameters(List<Parameter> parameters) {
         this.parameters = parameters;
+    }
+
+    public boolean isProxy() {
+        return proxy;
+    }
+
+    public void setProxy(boolean proxy) {
+        this.proxy = proxy;
     }
 
     public SSLConfig getSSLConfig() {
