@@ -40,16 +40,16 @@ public class MessageFuture {
     public void setMessageListener(MessageListener messageListener) {
         synchronized (httpCarbonMessage) {
             this.messageListener = messageListener;
-            while (!httpCarbonMessage.isEmpty()) {
-                HttpContent httpContent = httpCarbonMessage.getHttpContent();
+            while (!pendingPayload.isEmpty()) {
+                HttpContent httpContent = pendingPayload.poll();
                 notifyMessageListener(httpContent);
                 if (httpContent instanceof LastHttpContent) {
                     this.httpCarbonMessage.removeMessageFuture();
                     return;
                 }
             }
-            while (!pendingPayload.isEmpty()) {
-                HttpContent httpContent = pendingPayload.poll();
+            while (!httpCarbonMessage.isEmpty()) {
+                HttpContent httpContent = httpCarbonMessage.getHttpContent();
                 notifyMessageListener(httpContent);
                 if (httpContent instanceof LastHttpContent) {
                     this.httpCarbonMessage.removeMessageFuture();
