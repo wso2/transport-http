@@ -36,6 +36,8 @@
             <class name="org.wso2.transport.http.netty.contentaware.RequestResponseTransformTestCase" />
             <class name="org.wso2.transport.http.netty.contentaware.RequestResponseTransformStreamingTestCase" />
 
+            <class name="org.wso2.transport.http.netty.proxyserver.HttpsProxyTestCase" />
+            <class name="org.wso2.transport.http.netty.proxyserver.HttpProxyTestCase" />
             <class name="org.wso2.transport.http.netty.proxyserver.HttpsProxyServerTestCase" />
             <class name="org.wso2.transport.http.netty.proxyserver.HttpProxyServerTestCase" />
 

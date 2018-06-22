@@ -27,23 +27,33 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.oio.OioEventLoopGroup;
+import io.netty.channel.socket.oio.OioSocketChannel;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpRequestEncoder;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.common.Constants;
-import org.wso2.transport.http.netty.common.Util;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URL;
 
 /**
- * Handles the requests coming from the client. If it is a CONNECT request ssl tunnel is created. Then forward the
+ * Handles the requests coming from the client. If it is a CONNECT request ssl tunnel is created.
  */
 public class ProxyServerFrontEndHandler extends ChannelInboundHandlerAdapter {
-    private HttpRequest inboundRequest;
-    private Channel outboundChannel;
+
+    private Channel outboundChannel = null;
+    private static final Logger log = LoggerFactory.getLogger(ProxyServerFrontEndHandler.class);
 
     ProxyServerFrontEndHandler() {
     }
@@ -51,55 +61,68 @@ public class ProxyServerFrontEndHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         final Channel inboundChannel = ctx.channel();
-        if (ctx.channel().isActive()) {
-            if (msg instanceof HttpRequest) {
-                inboundRequest = (HttpRequest) msg;
-                String uri = inboundRequest.headers().entries().get(0).getValue();
-                String[] parts = uri.split(Constants.COLON);
-                String host = parts[0];
-                String port = parts[1];
+        if (msg instanceof HttpRequest) {
+            HttpRequest inboundRequest = (HttpRequest) msg;
+            String host = null;
+            int port = 0;
+            if (inboundRequest.method().equals(HttpMethod.CONNECT)) {
+                String parts[] = inboundRequest.uri().split(Constants.COLON);
+                host = parts[0];
+                port = Integer.parseInt(parts[1]);
+            } else {
+                URL url = new URL(inboundRequest.uri());
+                host = url.getHost();
+                port = url.getPort();
+            }
+            OioEventLoopGroup group = new OioEventLoopGroup(1);
+            Bootstrap clientBootstrap = new Bootstrap();
+            clientBootstrap.group(group).channel(OioSocketChannel.class)
+                    .remoteAddress(new InetSocketAddress(host, port))
+                    .handler(new ProxyServerBackendHandler(inboundChannel));
+            ChannelFuture channelFuture = clientBootstrap.connect(host, port).sync();
 
-                EventLoopGroup group = ctx.channel().eventLoop();
-                Bootstrap clientBootstrap = new Bootstrap();
-                clientBootstrap.group(group).channel(NioSocketChannel.class)
-                        .remoteAddress(new InetSocketAddress(host, Integer.parseInt(port)))
-                        .handler(new ProxyServerBackendHandler(inboundChannel));
-                ChannelFuture channelFuture = clientBootstrap.connect(host, Integer.parseInt(port));
-                outboundChannel = channelFuture.channel();
-
-                channelFuture.addListener((ChannelFutureListener) future -> {
-                    if (future.isSuccess()) {
-                        if (inboundRequest.method().equals(HttpMethod.CONNECT)) {
-                            // connection complete start to read first data
-                            Util.send200Ok(ctx, inboundRequest.protocolVersion());
-                            ctx.channel().pipeline().remove(Constants.HTTP_ENCODER);
-                            ctx.channel().pipeline().remove(Constants.HTTP_DECODER);
-                            ctx.channel().pipeline().remove(Constants.HTTP_COMPRESSOR);
-                            ctx.channel().pipeline().remove(Constants.HTTP_CHUNK_WRITER);
-                            ctx.channel().pipeline().remove(Constants.URI_LENGTH_VALIDATOR);
-                            ctx.channel().pipeline().remove(Constants.WEBSOCKET_SERVER_HANDSHAKE_HANDLER);
-                            ctx.channel().pipeline().remove(Constants.HTTP_SOURCE_HANDLER);
-                            ctx.channel().pipeline().fireChannelActive();
-                        } else {
-                            ctx.channel().pipeline().remove(Constants.HTTP_ENCODER);
-                            ctx.channel().pipeline().fireChannelActive();
-                            EmbeddedChannel ch = new EmbeddedChannel(new HttpRequestEncoder());
-                            ch.writeOutbound(msg);
-                            ByteBuf encoded = ch.readOutbound();
-                            outboundChannel.writeAndFlush(encoded).addListener((ChannelFutureListener) chFuture -> {
-                                if (!future.isSuccess()) {
-                                    future.channel().close();
-                                }
-                            });
-                        }
-                    } else {
-                        // Close the connection if the connection attempt has failed.
-                        inboundChannel.close();
+            outboundChannel = channelFuture.channel();
+            if (inboundRequest.method().equals(HttpMethod.CONNECT)) {
+                // Once the connection is successful, send 200 OK to client.
+                if (outboundChannel.isActive()) {
+                    send200Ok(inboundChannel, inboundRequest.protocolVersion());
+                    removeHandlers(ctx);
+                    ctx.channel().pipeline().fireChannelActive();
+                }
+            } else {
+                // This else block is for handling non https requests. Once the connection is successful
+                // forward the incoming messages to backend.
+                ((HttpRequest) msg).setUri(new URL(inboundRequest.uri()).getPath());
+                ((HttpRequest) msg).headers().set(HttpHeaderNames.VIA, InetAddress.getLocalHost().getHostName());
+                EmbeddedChannel channel = new EmbeddedChannel(new HttpRequestEncoder());
+                channel.writeOutbound(msg);
+                ByteBuf encodedRequest = channel.readOutbound();
+                outboundChannel.writeAndFlush(encodedRequest).addListener((ChannelFutureListener) chFuture -> {
+                    if (!chFuture.isSuccess()) {
+                        chFuture.channel().close();
+                    }
+                    if (chFuture.isSuccess()) {
+                        ctx.channel().pipeline().remove(Constants.HTTP_ENCODER);
+                        ctx.channel().pipeline().fireChannelActive();
+                        log.info("write and flush of http headers became successful");
                     }
                 });
-                ctx.channel().read();
+            }
+        } else {
+            if (msg instanceof HttpContent) {
+                log.info("Content received.");
+                outboundChannel.writeAndFlush(((HttpContent) msg).content())
+                        .addListener((ChannelFutureListener) future -> {
+                            if (future.isSuccess()) {
+                                log.info("Wrote the content to the backend.");
+                            }
+                            if (!future.isSuccess()) {
+                                log.info("Could not write the content to the backend.");
+                            }
+                        });
             } else {
                 if (outboundChannel.isActive()) {
+                    // This means, a CONNECT request has come prior to this.
                     outboundChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
                         if (!future.isSuccess()) {
                             future.channel().close();
@@ -108,6 +131,17 @@ public class ProxyServerFrontEndHandler extends ChannelInboundHandlerAdapter {
                 }
             }
         }
+    }
+
+    private void removeHandlers(ChannelHandlerContext ctx) {
+        ctx.channel().pipeline().remove(Constants.HTTP_DECODER);
+        ctx.channel().pipeline().remove(Constants.HTTP_ENCODER);
+        ctx.channel().pipeline().remove(Constants.URI_LENGTH_VALIDATOR);
+    }
+
+    private static void send200Ok(Channel channel, HttpVersion httpVersion) {
+        FullHttpResponse response = new DefaultFullHttpResponse(httpVersion, HttpResponseStatus.OK);
+        channel.writeAndFlush(response);
     }
 
     @Override

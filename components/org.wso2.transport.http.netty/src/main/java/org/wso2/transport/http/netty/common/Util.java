@@ -23,7 +23,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMessage;
@@ -600,11 +599,6 @@ public class Util {
         outboundRespFuture.addListener(
                 (ChannelFutureListener) channelFuture -> log.warn("Failed to send " + status.reasonPhrase()));
         ctx.channel().close();
-    }
-
-    public static void send200Ok(ChannelHandlerContext ctx, HttpVersion httpVersion) {
-        FullHttpResponse response = new DefaultFullHttpResponse(httpVersion, HttpResponseStatus.OK);
-        ctx.writeAndFlush(response);
     }
 
     /**

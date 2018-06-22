@@ -123,6 +123,10 @@ public class ListenerConfiguration {
     @XmlAttribute
     private boolean proxy = false;
 
+    private String proxyUserName;
+
+    private String proxyPassword;
+
     @XmlElementWrapper(name = "parameters")
     @XmlElement(name = "parameter")
     private List<Parameter> parameters = getDefaultParameters();
@@ -288,6 +292,22 @@ public class ListenerConfiguration {
 
     public void setProxy(boolean proxy) {
         this.proxy = proxy;
+    }
+
+    public String getProxyServerUserName() {
+        return proxyUserName;
+    }
+
+    public String getProxyServerPassword() {
+        return proxyPassword;
+    }
+
+    public void setProxyServerUserName(String proxyUserName) {
+        this.proxyUserName = proxyUserName;
+    }
+
+    public void setProxyServerPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
     }
 
     public SSLConfig getSSLConfig() {

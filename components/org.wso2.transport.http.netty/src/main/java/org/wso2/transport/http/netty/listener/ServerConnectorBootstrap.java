@@ -171,6 +171,14 @@ public class ServerConnectorBootstrap {
         httpServerChannelInitializer.setProxyEnabled(proxy);
     }
 
+    public void addProxyUsername(String userName) {
+        httpServerChannelInitializer.setProxyServerUserName(userName);
+    }
+
+    public void addProxyPassword(String proxyPassword) {
+        httpServerChannelInitializer.setProxyServerPassword(proxyPassword);
+    }
+
     public void addChunkingBehaviour(ChunkConfig chunkConfig) {
         httpServerChannelInitializer.setChunkingConfig(chunkConfig);
     }
