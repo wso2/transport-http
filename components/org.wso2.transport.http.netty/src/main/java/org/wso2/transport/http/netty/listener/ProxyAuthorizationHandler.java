@@ -30,9 +30,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.BASE64Encoder;
 
 import java.nio.charset.Charset;
+import java.util.Base64;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.PROXY_AUTHORIZATION;
 import static org.wso2.transport.http.netty.common.Constants.COLON;
@@ -45,7 +45,8 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
     private static final Logger log = LoggerFactory.getLogger(ProxyAuthorizationHandler.class);
     private String authString;
     ProxyAuthorizationHandler(String userName, String password) {
-        this.authString = new BASE64Encoder().encode((userName + COLON + password).getBytes(Charset.forName("UTF-8")));
+        this.authString = Base64.getEncoder()
+                .encodeToString((userName + COLON + password).getBytes(Charset.forName("UTF-8")));
     }
 
     @Override
@@ -57,7 +58,6 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
             ctx.channel().pipeline().remove(this);
             String authHeader = ((HttpRequest) msg).headers().get(PROXY_AUTHORIZATION);
             if (authHeader == null) {
-                // 401
                 send407AuthenticationRequired(ctx, ((HttpRequest) msg).protocolVersion());
             } else {
                 String[] authParts = authHeader.split("\\s+");
@@ -78,7 +78,8 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * If the user hasn't provided authorization information send a 407 status code.
+     * If user hasn't provided authorization information, send a 407 status code.
+     *
      * @param ctx channel context
      * @param httpVersion http version of the request
      */
@@ -94,6 +95,7 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
 
     /**
      * If user has given wrong username and password.
+     *
      * @param ctx channel context
      * @param httpVersion http version of the request
      */
@@ -105,3 +107,4 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
         ctx.channel().close();
     }
 }
+

@@ -242,5 +242,5 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
             ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
-
 }
+

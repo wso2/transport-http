@@ -210,7 +210,6 @@ public final class Constants {
     public static final String HTTP_ENCODER = "encoder";
     public static final String HTTP_COMPRESSOR = "compressor";
     public static final String HTTP_CHUNK_WRITER = "chunkWriter";
-    public static final String URI_LENGTH_VALIDATOR = "uriLengthValidator";
     public static final String HTTP_DECODER = "decoder";
     public static final String HTTP_CLIENT_CODEC = "codec";
     public static final String HTTP_SERVER_CODEC = "ServerCodec";
