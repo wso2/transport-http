@@ -50,19 +50,29 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        log.debug("Processing request via ProxyAuthorizationHandler.");
         if (msg instanceof HttpRequest) {
+            // Once the http request is received by this handler, remove this as we don't need to validate http
+            // content coming after that.
             ctx.channel().pipeline().remove(this);
             String authHeader = ((HttpRequest) msg).headers().get(PROXY_AUTHORIZATION);
             if (authHeader == null) {
+                // 401
                 send407AuthenticationRequired(ctx, ((HttpRequest) msg).protocolVersion());
             } else {
                 String[] authParts = authHeader.split("\\s+");
-                String authInfo = authParts[1];
-                if (authInfo.equals(authString)) {
-                    ctx.fireChannelRead(msg);
-                } else {
-                    send401Unauthorized(ctx, ((HttpRequest) msg).protocolVersion());
+                if (authParts.length > 0) {
+                    String authInfo = authParts[1];
+                    if (authInfo.equals(authString)) {
+                        ctx.fireChannelRead(msg);
+                        // Authorization success.
+                        log.debug("Authentication success.");
+                        return;
+                    }
                 }
+                // Authorization failure.
+                log.debug("Authentication failure.");
+                send401Unauthorized(ctx, ((HttpRequest) msg).protocolVersion());
             }
         }
     }
@@ -77,7 +87,7 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
                 HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED);
         ChannelFuture outBoundResp = ctx.writeAndFlush(response);
         outBoundResp.addListener((ChannelFutureListener) channelFuture -> log
-                .warn("Failed to connect to proxy server :" + HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED
+                .error("Failed to connect to proxy server :" + HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED
                         .reasonPhrase()));
         ctx.channel().close();
     }
@@ -91,7 +101,7 @@ public class ProxyAuthorizationHandler extends ChannelInboundHandlerAdapter {
         FullHttpResponse response = new DefaultFullHttpResponse(httpVersion, HttpResponseStatus.UNAUTHORIZED);
         ChannelFuture outBoundResp = ctx.writeAndFlush(response);
         outBoundResp.addListener((ChannelFutureListener) channelFuture -> log
-                .warn("Failed to connect to proxy server :" + HttpResponseStatus.UNAUTHORIZED.reasonPhrase()));
+                .error("Failed to connect to proxy server :" + HttpResponseStatus.UNAUTHORIZED.reasonPhrase()));
         ctx.channel().close();
     }
 }

@@ -76,6 +76,7 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
         if (listenerConfig.isProxy()) {
             serverConnectorBootstrap.addProxyUsername(listenerConfig.getProxyServerUserName());
             serverConnectorBootstrap.addProxyPassword(listenerConfig.getProxyServerPassword());
+            serverConnectorBootstrap.addProxyPseudonym(listenerConfig.getProxyPseudonym());
         }
         serverConnectorBootstrap.addIdleTimeout(listenerConfig.getSocketIdleTimeout(120000));
         if (Constants.HTTP_2_0 == Float.valueOf(listenerConfig.getVersion())) {

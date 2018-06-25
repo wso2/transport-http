@@ -179,6 +179,10 @@ public class ServerConnectorBootstrap {
         httpServerChannelInitializer.setProxyServerPassword(proxyPassword);
     }
 
+    public void addProxyPseudonym(String proxyPseudonym) {
+        httpServerChannelInitializer.setProxyPseudonym(proxyPseudonym);
+    }
+
     public void addChunkingBehaviour(ChunkConfig chunkConfig) {
         httpServerChannelInitializer.setChunkingConfig(chunkConfig);
     }

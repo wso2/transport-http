@@ -93,6 +93,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     private boolean proxy = false;
     private String proxyUserName = null;
     private String proxyPassword = null;
+    private String proxyPseudonym = null;
 
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -203,7 +204,8 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
                 serverPipeline.addLast(Constants.PROXY_AUTHORIZATION_HANDLER,
                         new ProxyAuthorizationHandler(proxyUserName, proxyPassword));
             }
-            serverPipeline.addLast(Constants.PROXY_HANDLER, new ProxyServerFrontEndHandler());
+            serverPipeline
+                    .addLast(Constants.PROXY_SERVER_INBOUND_HANDLER, new ProxyServerInboundHandler(proxyPseudonym));
         } else {
             if (reqSizeValidationConfig.getMaxEntityBodySize() > -1) {
                 serverPipeline.addLast("maxEntityBodyValidator",
@@ -338,6 +340,10 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
 
     void setProxyServerPassword(String proxyPassword) {
         this.proxyPassword = proxyPassword;
+    }
+
+    void setProxyPseudonym(String proxyPseudonym) {
+        this.proxyPseudonym = proxyPseudonym;
     }
 
     /**
