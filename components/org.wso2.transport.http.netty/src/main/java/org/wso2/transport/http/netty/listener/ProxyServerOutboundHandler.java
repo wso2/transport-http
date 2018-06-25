@@ -29,11 +29,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * Forward the responses coming from the server to client.
  */
 @ChannelHandler.Sharable
-public class ProxyServerBackendHandler extends ChannelInboundHandlerAdapter {
+public class ProxyServerOutboundHandler extends ChannelInboundHandlerAdapter {
 
     private final Channel inboundChannel;
 
-    ProxyServerBackendHandler(Channel inboundChannel) {
+    ProxyServerOutboundHandler(Channel inboundChannel) {
         this.inboundChannel = inboundChannel;
     }
 

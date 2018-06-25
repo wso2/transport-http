@@ -68,7 +68,6 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        log.debug("Processing request via ProxyServerInboundHandler.");
         final Channel inboundChannel = ctx.channel();
         if (msg instanceof HttpRequest) {
             handleHttpRequest(ctx, msg, inboundChannel);
@@ -109,6 +108,7 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
      */
     private void handleHttpRequest(ChannelHandlerContext ctx, Object msg, Channel inboundChannel)
             throws MalformedURLException, InterruptedException, UnknownHostException {
+        log.debug("Processing http request via ProxyServerInboundHandler.");
         HttpRequest inboundRequest = (HttpRequest) msg;
         InetSocketAddress reqSocket = resolveInetSocketAddress(inboundRequest);
         String host = reqSocket.getHostName();
@@ -119,7 +119,7 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
         clientBootstrap.group(group).channel(OioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .remoteAddress(new InetSocketAddress(host, port))
-                .handler(new ProxyServerBackendHandler(inboundChannel));
+                .handler(new ProxyServerOutboundHandler(inboundChannel));
         ChannelFuture channelFuture = clientBootstrap.connect(host, port).sync();
         outboundChannel = channelFuture.channel();
 
