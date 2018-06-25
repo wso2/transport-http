@@ -74,7 +74,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
 
     private static final Logger log = LoggerFactory.getLogger(HttpServerChannelInitializer.class);
 
-    private int socketIdleTimeout;
+    private long socketIdleTimeout;
     private boolean httpTraceLogEnabled;
     private boolean httpAccessLogEnabled;
     private ChunkConfig chunkConfig;
@@ -212,16 +212,15 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
                         new MaxEntityBodyValidator(this.serverName, reqSizeValidationConfig.getMaxEntityBodySize()));
             }
 
-            serverPipeline.addLast(Constants.WEBSOCKET_SERVER_HANDSHAKE_HANDLER,
-                    new WebSocketServerHandshakeHandler(this.serverConnectorFuture, this.interfaceId));
-            serverPipeline.addLast(Constants.HTTP_SOURCE_HANDLER,
-                    new SourceHandler(this.serverConnectorFuture, this.interfaceId, this.chunkConfig, keepAliveConfig,
-                            this.serverName, this.allChannels));
-            if (socketIdleTimeout > 0) {
-                serverPipeline.addBefore(Constants.HTTP_SOURCE_HANDLER, Constants.IDLE_STATE_HANDLER,
-                        new IdleStateHandler(socketIdleTimeout, socketIdleTimeout, socketIdleTimeout,
-                                TimeUnit.MILLISECONDS));
-            }
+        serverPipeline.addLast(Constants.WEBSOCKET_SERVER_HANDSHAKE_HANDLER,
+                         new WebSocketServerHandshakeHandler(this.serverConnectorFuture, this.interfaceId));
+        serverPipeline.addLast(Constants.HTTP_SOURCE_HANDLER,
+                               new SourceHandler(this.serverConnectorFuture, this.interfaceId, this.chunkConfig,
+                                                 keepAliveConfig, this.serverName, this.allChannels));
+        if (socketIdleTimeout >= 0) {
+            serverPipeline.addBefore(Constants.HTTP_SOURCE_HANDLER, Constants.IDLE_STATE_HANDLER,
+                    new IdleStateHandler(socketIdleTimeout, socketIdleTimeout, socketIdleTimeout,
+                            TimeUnit.MILLISECONDS));
         }
     }
 
@@ -270,7 +269,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
         this.serverConnectorFuture = serverConnectorFuture;
     }
 
-    void setIdleTimeout(int idleTimeout) {
+    void setIdleTimeout(long idleTimeout) {
         this.socketIdleTimeout = idleTimeout;
     }
 

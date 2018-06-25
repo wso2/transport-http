@@ -31,7 +31,7 @@ import org.wso2.transport.http.netty.contract.HttpClientConnector;
 import org.wso2.transport.http.netty.contract.HttpWsConnectorFactory;
 import org.wso2.transport.http.netty.contract.ServerConnector;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnector;
-import org.wso2.transport.http.netty.contract.websocket.WsClientConnectorConfig;
+import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnectorConfig;
 import org.wso2.transport.http.netty.contractimpl.websocket.DefaultWebSocketClientConnector;
 import org.wso2.transport.http.netty.listener.ServerBootstrapConfiguration;
 import org.wso2.transport.http.netty.listener.ServerConnectorBootstrap;
@@ -72,6 +72,7 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
         serverConnectorBootstrap.addCacheDelay(listenerConfig.getCacheValidityPeriod());
         serverConnectorBootstrap.addCacheSize(listenerConfig.getCacheSize());
         serverConnectorBootstrap.addOcspStapling(listenerConfig.isOcspStaplingEnabled());
+        serverConnectorBootstrap.addIdleTimeout(listenerConfig.getSocketIdleTimeout());
         serverConnectorBootstrap.addProxy(listenerConfig.isProxy());
         if (listenerConfig.isProxy()) {
             serverConnectorBootstrap.addProxyUsername(listenerConfig.getProxyServerUserName());
@@ -102,7 +103,7 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
     }
 
     @Override
-    public WebSocketClientConnector createWsClientConnector(WsClientConnectorConfig clientConnectorConfig) {
+    public WebSocketClientConnector createWsClientConnector(WebSocketClientConnectorConfig clientConnectorConfig) {
         return new DefaultWebSocketClientConnector(clientConnectorConfig, clientGroup);
     }
 
