@@ -139,7 +139,7 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
             ByteBuf encodedRequest = getByteBuf(msg);
             outboundChannel.writeAndFlush(encodedRequest).addListener((ChannelFutureListener) chFuture -> {
                 if (!chFuture.isSuccess()) {
-                    log.error("Unable to write to the backend.");
+                    log.error("Failed to write to the backend via proxy.");
                     chFuture.channel().close();
                 }
                 if (chFuture.isSuccess()) {
@@ -203,8 +203,7 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
      */
     private void removeOtherHandlers(ChannelHandlerContext ctx) {
         for (String handler : ctx.channel().pipeline().names()) {
-            if (!(PROXY_SERVER_INBOUND_HANDLER.equals(handler) || handler
-                    .contains(DEFAULT_CHANNEL_PIPELINE))) {
+            if (!(PROXY_SERVER_INBOUND_HANDLER.equals(handler) || handler.contains(DEFAULT_CHANNEL_PIPELINE))) {
                 ctx.channel().pipeline().remove(handler);
             }
         }

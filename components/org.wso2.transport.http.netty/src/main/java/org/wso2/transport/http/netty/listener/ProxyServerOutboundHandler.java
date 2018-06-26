@@ -24,6 +24,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Forward the responses coming from the server to client.
@@ -32,6 +34,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 public class ProxyServerOutboundHandler extends ChannelInboundHandlerAdapter {
 
     private final Channel inboundChannel;
+    private static final Logger log = LoggerFactory.getLogger(ProxyServerOutboundHandler.class);
 
     ProxyServerOutboundHandler(Channel inboundChannel) {
         this.inboundChannel = inboundChannel;
@@ -41,6 +44,7 @@ public class ProxyServerOutboundHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(final ChannelHandlerContext ctx, Object msg) {
         inboundChannel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
+                log.error("Failed to write the response to client via proxy.");
                 future.channel().close();
             }
         });
