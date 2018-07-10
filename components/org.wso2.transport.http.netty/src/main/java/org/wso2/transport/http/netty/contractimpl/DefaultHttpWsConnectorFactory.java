@@ -73,6 +73,12 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
         serverConnectorBootstrap.addCacheSize(listenerConfig.getCacheSize());
         serverConnectorBootstrap.addOcspStapling(listenerConfig.isOcspStaplingEnabled());
         serverConnectorBootstrap.addIdleTimeout(listenerConfig.getSocketIdleTimeout());
+        serverConnectorBootstrap.addProxy(listenerConfig.isProxy());
+        if (listenerConfig.isProxy()) {
+            serverConnectorBootstrap.addProxyUsername(listenerConfig.getProxyServerUserName());
+            serverConnectorBootstrap.addProxyPassword(listenerConfig.getProxyServerPassword());
+            serverConnectorBootstrap.addProxyPseudonym(listenerConfig.getProxyPseudonym());
+        }
         if (Constants.HTTP_2_0 == Float.valueOf(listenerConfig.getVersion())) {
             serverConnectorBootstrap.setHttp2Enabled(true);
         }

@@ -118,6 +118,10 @@ public class ListenerConfiguration {
 
     @XmlAttribute
     private boolean ocspStaplingEnabled = false;
+    private boolean proxy = false;
+    private String proxyUserName;
+    private String proxyPassword;
+    private String proxyPseudonym;
 
     @XmlElementWrapper(name = "parameters")
     @XmlElement(name = "parameter")
@@ -278,6 +282,30 @@ public class ListenerConfiguration {
         this.parameters = parameters;
     }
 
+    public boolean isProxy() {
+        return proxy;
+    }
+
+    public void setProxy(boolean proxy) {
+        this.proxy = proxy;
+    }
+
+    public String getProxyServerUserName() {
+        return proxyUserName;
+    }
+
+    public String getProxyServerPassword() {
+        return proxyPassword;
+    }
+
+    public void setProxyServerUserName(String proxyUserName) {
+        this.proxyUserName = proxyUserName;
+    }
+
+    public void setProxyServerPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
+    }
+
     public SSLConfig getSSLConfig() {
         if (scheme == null || !scheme.equalsIgnoreCase("https")) {
             return null;
@@ -363,5 +391,13 @@ public class ListenerConfiguration {
 
     public boolean isOcspStaplingEnabled () {
         return ocspStaplingEnabled;
+    }
+
+    public String getProxyPseudonym() {
+        return proxyPseudonym;
+    }
+
+    public void setProxyPseudonym(String proxyPseudonym) {
+        this.proxyPseudonym = proxyPseudonym;
     }
 }

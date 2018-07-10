@@ -59,6 +59,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
 import java.util.concurrent.TimeUnit;
+
 import javax.net.ssl.SSLEngine;
 
 import static org.wso2.transport.http.netty.common.Constants.ACCESS_LOG;
@@ -89,6 +90,10 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     private int cacheSize;
     private ChannelGroup allChannels;
     private boolean ocspStaplingEnabled = false;
+    private boolean proxy = false;
+    private String proxyUserName = null;
+    private String proxyPassword = null;
+    private String proxyPseudonym = null;
 
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -181,8 +186,10 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
                                                           reqSizeValidationConfig.getMaxHeaderSize(),
                                                           reqSizeValidationConfig.getMaxChunkSize()));
 
-            serverPipeline.addLast(Constants.HTTP_COMPRESSOR, new CustomHttpContentCompressor());
-            serverPipeline.addLast(Constants.HTTP_CHUNK_WRITER, new ChunkedWriteHandler());
+            if (!proxy) {
+                serverPipeline.addLast(Constants.HTTP_COMPRESSOR, new CustomHttpContentCompressor());
+                serverPipeline.addLast(Constants.HTTP_CHUNK_WRITER, new ChunkedWriteHandler());
+            }
 
             if (httpTraceLogEnabled) {
                 serverPipeline.addLast(HTTP_TRACE_LOG_HANDLER, new HTTPTraceLoggingHandler(TRACE_LOG_DOWNSTREAM));
@@ -192,20 +199,29 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
             }
         }
         serverPipeline.addLast("uriLengthValidator", new UriAndHeaderLengthValidator(this.serverName));
-        if (reqSizeValidationConfig.getMaxEntityBodySize() > -1) {
-            serverPipeline.addLast("maxEntityBodyValidator", new MaxEntityBodyValidator(this.serverName,
-                    reqSizeValidationConfig.getMaxEntityBodySize()));
-        }
+        if (proxy) {
+            if (proxyUserName != null && !proxyUserName.isEmpty()) {
+                serverPipeline.addLast(Constants.PROXY_AUTHORIZATION_HANDLER,
+                        new ProxyAuthorizationHandler(proxyUserName, proxyPassword));
+            }
+            serverPipeline
+                    .addLast(Constants.PROXY_SERVER_INBOUND_HANDLER, new ProxyServerInboundHandler(proxyPseudonym));
+        } else {
+            if (reqSizeValidationConfig.getMaxEntityBodySize() > -1) {
+                serverPipeline.addLast("maxEntityBodyValidator",
+                        new MaxEntityBodyValidator(this.serverName, reqSizeValidationConfig.getMaxEntityBodySize()));
+            }
 
-        serverPipeline.addLast(Constants.WEBSOCKET_SERVER_HANDSHAKE_HANDLER,
-                         new WebSocketServerHandshakeHandler(this.serverConnectorFuture, this.interfaceId));
-        serverPipeline.addLast(Constants.HTTP_SOURCE_HANDLER,
-                               new SourceHandler(this.serverConnectorFuture, this.interfaceId, this.chunkConfig,
-                                                 keepAliveConfig, this.serverName, this.allChannels));
-        if (socketIdleTimeout >= 0) {
-            serverPipeline.addBefore(Constants.HTTP_SOURCE_HANDLER, Constants.IDLE_STATE_HANDLER,
-                    new IdleStateHandler(socketIdleTimeout, socketIdleTimeout, socketIdleTimeout,
-                            TimeUnit.MILLISECONDS));
+            serverPipeline.addLast(Constants.WEBSOCKET_SERVER_HANDSHAKE_HANDLER,
+                    new WebSocketServerHandshakeHandler(this.serverConnectorFuture, this.interfaceId));
+            serverPipeline.addLast(Constants.HTTP_SOURCE_HANDLER,
+                    new SourceHandler(this.serverConnectorFuture, this.interfaceId, this.chunkConfig, keepAliveConfig,
+                            this.serverName, this.allChannels));
+            if (socketIdleTimeout >= 0) {
+                serverPipeline.addBefore(Constants.HTTP_SOURCE_HANDLER, Constants.IDLE_STATE_HANDLER,
+                        new IdleStateHandler(socketIdleTimeout, socketIdleTimeout, socketIdleTimeout,
+                                TimeUnit.MILLISECONDS));
+            }
         }
     }
 
@@ -312,6 +328,22 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
 
     void setOcspStaplingEnabled(boolean ocspStaplingEnabled) {
         this.ocspStaplingEnabled = ocspStaplingEnabled;
+    }
+
+    void setProxyEnabled(boolean proxy) {
+        this.proxy = proxy;
+    }
+
+    void setProxyServerUserName(String proxyUserName) {
+        this.proxyUserName = proxyUserName;
+    }
+
+    void setProxyServerPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
+    }
+
+    void setProxyPseudonym(String proxyPseudonym) {
+        this.proxyPseudonym = proxyPseudonym;
     }
 
     /**

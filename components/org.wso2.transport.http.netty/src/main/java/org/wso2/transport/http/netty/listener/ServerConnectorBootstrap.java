@@ -167,6 +167,22 @@ public class ServerConnectorBootstrap {
         httpServerChannelInitializer.setOcspStaplingEnabled(ocspStapling);
     }
 
+    public void addProxy(boolean proxy) {
+        httpServerChannelInitializer.setProxyEnabled(proxy);
+    }
+
+    public void addProxyUsername(String userName) {
+        httpServerChannelInitializer.setProxyServerUserName(userName);
+    }
+
+    public void addProxyPassword(String proxyPassword) {
+        httpServerChannelInitializer.setProxyServerPassword(proxyPassword);
+    }
+
+    public void addProxyPseudonym(String proxyPseudonym) {
+        httpServerChannelInitializer.setProxyPseudonym(proxyPseudonym);
+    }
+
     public void addChunkingBehaviour(ChunkConfig chunkConfig) {
         httpServerChannelInitializer.setChunkingConfig(chunkConfig);
     }
