@@ -41,6 +41,8 @@ import org.wso2.transport.http.netty.sender.http2.Http2ClientChannel;
 import org.wso2.transport.http.netty.sender.http2.Http2TargetHandler;
 import org.wso2.transport.http.netty.sender.http2.TimeoutHandler;
 
+import java.io.IOException;
+
 import static org.wso2.transport.http.netty.common.Util.createInboundRespCarbonMsg;
 import static org.wso2.transport.http.netty.common.Util.safelyRemoveHandlers;
 
