@@ -77,6 +77,9 @@ public class WebSocketServerHandshakeHandler extends ChannelInboundHandlerAdapte
                         LOG.debug("Upgrading the connection from Http to WebSocket for channel : {}", ctx.channel());
                     }
                     ChannelPipeline pipeline = ctx.pipeline();
+                    if (pipeline.get(Constants.OUTBOUND_THROTTLING_HANDLER) != null) {
+                        pipeline.remove(Constants.OUTBOUND_THROTTLING_HANDLER);
+                    }
                     pipeline.remove(Constants.HTTP_SOURCE_HANDLER);
                     ChannelHandlerContext decoderCtx = pipeline.context(HttpRequestDecoder.class);
                     pipeline.addAfter(decoderCtx.name(), HTTP_OBJECT_AGGREGATOR,
@@ -121,7 +124,7 @@ public class WebSocketServerHandshakeHandler extends ChannelInboundHandlerAdapte
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR))
                 .addListener(ChannelFutureListener.CLOSE);
-        LOG.error("Error during WebSocket server handshake", cause);
+        LOG.error("Error occurred: ", cause);
     }
 
     /**

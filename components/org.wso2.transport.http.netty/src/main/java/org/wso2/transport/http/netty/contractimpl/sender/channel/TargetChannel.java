@@ -17,6 +17,7 @@ package org.wso2.transport.http.netty.contractimpl.sender.channel;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -27,7 +28,9 @@ import org.wso2.transport.http.netty.contract.HttpResponseFuture;
 import org.wso2.transport.http.netty.contract.config.ChunkConfig;
 import org.wso2.transport.http.netty.contract.config.ForwardedExtensionConfig;
 import org.wso2.transport.http.netty.contractimpl.common.HttpRoute;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.MessageStateContext;
+
 import org.wso2.transport.http.netty.contractimpl.listener.HttpTraceLoggingHandler;
 import org.wso2.transport.http.netty.contractimpl.listener.SourceHandler;
 import org.wso2.transport.http.netty.contractimpl.sender.ConnectionAvailabilityFuture;
@@ -96,10 +99,6 @@ public class TargetChannel {
         return this;
     }
 
-    private TargetHandler getTargetHandler() {
-        return targetHandler;
-    }
-
     private void setTargetHandler(TargetHandler targetHandler) {
         this.targetHandler = targetHandler;
     }
@@ -142,11 +141,14 @@ public class TargetChannel {
 
     public void configTargetHandler(HttpCarbonMessage httpCarbonMessage, HttpResponseFuture httpInboundResponseFuture) {
         this.setTargetHandler(this.getHttpClientChannelInitializer().getTargetHandler());
-        TargetHandler handler = this.getTargetHandler();
-        handler.setHttpResponseFuture(httpInboundResponseFuture);
-        handler.setOutboundRequestMsg(httpCarbonMessage);
-        handler.setConnectionManager(connectionManager);
-        handler.setTargetChannel(this);
+        targetHandler.setHttpResponseFuture(httpInboundResponseFuture);
+        targetHandler.setOutboundRequestMsg(httpCarbonMessage);
+        targetHandler.setConnectionManager(connectionManager);
+        targetHandler.setTargetChannel(this);
+        //The following is required for outbound throttling.
+        ChannelHandlerContext context = targetHandler.getContext();
+        httpCarbonMessage.setTargetContext(context);
+        Util.setHttpCarbonMessageToOutboundThrottlingHandler(httpCarbonMessage, context);
 
         this.httpInboundResponseFuture = httpInboundResponseFuture;
     }
@@ -208,7 +210,7 @@ public class TargetChannel {
                 })));
     }
 
-    private void writeOutboundRequest(HttpCarbonMessage httpOutboundRequest, HttpContent httpContent) throws Exception {
+    private void writeOutboundRequest(HttpCarbonMessage httpOutboundRequest, HttpContent httpContent) {
         httpOutboundRequest.getMessageStateContext().getSenderState()
                 .writeOutboundRequestEntity(httpOutboundRequest, httpContent);
     }

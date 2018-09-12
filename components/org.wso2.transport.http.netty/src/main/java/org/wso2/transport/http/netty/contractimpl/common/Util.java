@@ -809,4 +809,23 @@ public class Util {
         sslParams.setEndpointIdentificationAlgorithm(Constants.HTTPS_SCHEME);
         sslEngine.setSSLParameters(sslParams);
     }
+
+    /**
+     * Use this method to set the {@link HttpCarbonMessage} to the {@link OutboundThrottlingHandler}
+     * in the pipeline. This requires a {@link ChannelHandlerContext} of a handler in the pipeline.
+     *
+     * @param httpCarbonMessage the carbonMessage to be set to the {@link OutboundThrottlingHandler}
+     * @param channelContext    the channelContext which will be used to obtain the {@link OutboundThrottlingHandler}
+     *                          in the pipeline.
+     */
+    public static void setHttpCarbonMessageToOutboundThrottlingHandler(HttpCarbonMessage httpCarbonMessage,
+                                                                       ChannelHandlerContext channelContext) {
+        if (channelContext != null) {
+            OutboundThrottlingHandler throttlingHandler =
+                    (OutboundThrottlingHandler) channelContext.pipeline().get(Constants.OUTBOUND_THROTTLING_HANDLER);
+            if (throttlingHandler != null) {
+                throttlingHandler.setHttpCarbonMessage(httpCarbonMessage);
+            }
+        }
+    }
 }
