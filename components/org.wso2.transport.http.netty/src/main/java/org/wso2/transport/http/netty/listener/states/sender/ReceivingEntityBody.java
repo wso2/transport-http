@@ -76,6 +76,7 @@ public class ReceivingEntityBody implements SenderState {
             messageStateContext.setSenderState(new EntityBodyReceived());
 
             if (!isKeepAlive(targetHandler.getKeepAliveConfig(), targetHandler.getOutboundRequestMsg())) {
+                targetHandler.releaseWritingBlocker();
                 targetHandler.closeChannel(ctx);
             }
             targetHandler.getConnectionManager().returnChannel(targetHandler.getTargetChannel());

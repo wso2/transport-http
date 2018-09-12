@@ -21,6 +21,7 @@ package org.wso2.transport.http.netty.message;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import io.netty.handler.codec.http.DefaultHttpContent;
@@ -46,7 +47,7 @@ public class HttpMessageDataStreamer {
 
     private static final Logger log = LoggerFactory.getLogger(HttpMessageDataStreamer.class);
 
-    private HttpCarbonMessage httpCarbonMessage;
+    private final HttpCarbonMessage httpCarbonMessage;
 
     private static final int CONTENT_BUFFER_SIZE = 8192;
     private ByteBufAllocator pooledByteBufAllocator;
@@ -130,11 +131,18 @@ public class HttpMessageDataStreamer {
                 dataHolder.writeByte((byte) b);
             } else {
                 try {
+                    Channel channel = httpCarbonMessage.getChannel();
+                    //The channel inactive check is needed to prevent the semaphore blocking after channel is closed.
+                    if (channel != null && !channel.isWritable() && channel.isActive()) {
+                        httpCarbonMessage.getWritingBlocker().acquire();
+                    }
                     httpCarbonMessage.addHttpContent(new DefaultHttpContent(dataHolder));
                     dataHolder = getBuffer();
                     dataHolder.writeByte((byte) b);
                 } catch (RuntimeException ex) {
                     throw new EncoderException(httpCarbonMessage.getIoException());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
         }

@@ -154,6 +154,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
+        releaseWritingBlocker();
         ctx.close();
         if (!idleTimeout) {
             if (!requestSet.isEmpty()) {
@@ -167,6 +168,22 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         if (handlerExecutor != null) {
             handlerExecutor.executeAtSourceConnectionTermination(Integer.toString(ctx.hashCode()));
             handlerExecutor = null;
+        }
+    }
+
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        boolean value = ctx.channel().isWritable();
+        log.error("{}", value);
+        if (value) {
+            releaseWritingBlocker();
+        }
+        super.channelWritabilityChanged(ctx);
+    }
+
+    private void releaseWritingBlocker() {
+        if (inboundRequestMsg.getWritingBlocker() != null) {
+            inboundRequestMsg.getWritingBlocker().release();
         }
     }
 

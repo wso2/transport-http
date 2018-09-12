@@ -97,6 +97,7 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        releaseWritingBlocker();
         closeChannel(ctx);
         if (!idleTimeoutTriggered) {
             outboundRequestMsg.getMessageStateContext().getSenderState().handleAbruptChannelClosure(httpResponseFuture);
@@ -111,6 +112,7 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        releaseWritingBlocker();
         closeChannel(ctx);
         log.warn("Exception occurred in TargetHandler : {}", cause.getMessage());
     }
@@ -148,6 +150,13 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+    @Override
+    public synchronized void channelWritabilityChanged(ChannelHandlerContext ctx) {
+        if (ctx.channel().isWritable()) {
+            releaseWritingBlocker();
+        }
+    }
+
     private void executePostUpgradeActions(ChannelHandlerContext ctx) {
         ctx.pipeline().remove(this);
         ctx.pipeline().addLast(Constants.HTTP2_TARGET_HANDLER, http2TargetHandler);
@@ -179,6 +188,10 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
         if (ctx != null && ctx.channel().isActive()) {
             ctx.close();
         }
+    }
+
+    public void releaseWritingBlocker() {
+        outboundRequestMsg.getWritingBlocker().release();
     }
 
     public void setHttpResponseFuture(HttpResponseFuture httpResponseFuture) {

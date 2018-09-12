@@ -93,7 +93,7 @@ public class ReceivingHeaders implements ListenerState {
                 ServerConnectorFuture outboundRespFuture = httpRequestMsg.getHttpResponseFuture();
                 outboundRespFuture.setHttpConnectorListener(
                         new HttpOutboundRespListener(httpRequestMsg, sourceHandler));
-                httpRequestMsg.setSourceContext(sourceHandler.getInboundChannelContext());
+                httpRequestMsg.setChannel(sourceHandler.getInboundChannelContext().channel());
                 sourceHandler.getServerConnectorFuture().notifyHttpListener(httpRequestMsg);
             } catch (Exception e) {
                 log.error("Error while notifying listeners", e);
