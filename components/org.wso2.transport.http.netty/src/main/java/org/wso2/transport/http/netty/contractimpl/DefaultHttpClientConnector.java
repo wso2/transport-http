@@ -195,6 +195,7 @@ public class DefaultHttpClientConnector implements HttpClientConnector {
                             || protocol.equalsIgnoreCase(Constants.HTTP2_TLS_PROTOCOL)) {
                         prepareTargetChannelForHttp2();
                     } else {
+                        httpOutboundRequest.setChannel(channelFuture.channel());
                         // Response for the upgrade request will arrive in stream 1,
                         // so use 1 as the stream id.
                         prepareTargetChannelForHttp(channelFuture);

@@ -18,6 +18,7 @@
 
 package org.wso2.transport.http.netty.httppipelining;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
@@ -58,8 +59,8 @@ public class HttpPipeliningListener implements HttpConnectorListener {
                 httpResponse.setProperty(Constants.HTTP_STATUS_CODE, HttpResponseStatus.OK.code());
                 httpResponse.setSequenceId(httpRequest.getSequenceId());
                 httpResponse.setPipeliningNeeded(httpRequest.isPipeliningNeeded());
-                ChannelHandlerContext sourceContext = httpRequest.getSourceContext();
-                Long nextSequenceNumber = sourceContext.channel().attr(Constants.NEXT_SEQUENCE_NUMBER).get();
+                Channel channel = httpRequest.getChannel();
+                Long nextSequenceNumber = channel.attr(Constants.NEXT_SEQUENCE_NUMBER).get();
                 httpResponse.setHeader("x-sequence-number", nextSequenceNumber.toString());
                 do {
                     HttpContent httpContent = httpRequest.getHttpContent();

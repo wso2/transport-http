@@ -19,7 +19,7 @@
 package org.wso2.transport.http.netty.message;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.DefaultHttpRequest;
@@ -43,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 /**
  * HTTP based representation for HttpCarbonMessage.
@@ -57,12 +58,13 @@ public class HttpCarbonMessage {
     private final ServerConnectorFuture httpOutboundRespFuture = new HttpWsServerConnectorFuture();
     private final DefaultHttpResponseFuture httpOutboundRespStatusFuture = new DefaultHttpResponseFuture();
     private final Observable contentObservable = new DefaultObservable();
+    private final Semaphore writingBlocker = new Semaphore(0);
     private IOException ioException;
     private MessageStateContext messageStateContext;
 
 
     private long sequenceId; //Keep track of request/response order
-    private ChannelHandlerContext sourceContext;
+    private Channel channel;
     private HttpPipeliningFuture pipeliningFuture;
     private boolean keepAlive;
     private boolean pipeliningNeeded;
@@ -414,12 +416,12 @@ public class HttpCarbonMessage {
         this.sequenceId = sequenceId;
     }
 
-    public ChannelHandlerContext getSourceContext() {
-        return sourceContext;
+    public Channel getChannel() {
+        return channel;
     }
 
-    public void setSourceContext(ChannelHandlerContext sourceContext) {
-        this.sourceContext = sourceContext;
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public boolean isKeepAlive() {
@@ -444,5 +446,9 @@ public class HttpCarbonMessage {
 
     public void setPipeliningFuture(HttpPipeliningFuture pipeliningFuture) {
         this.pipeliningFuture = pipeliningFuture;
+    }
+
+    public Semaphore getWritingBlocker() {
+        return writingBlocker;
     }
 }
