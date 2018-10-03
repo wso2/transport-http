@@ -184,7 +184,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         if (ctx != null && ctx.channel().isActive()) {
             ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
-        LOG.warn("Exception occurred in SourceHandler : {}", cause.getMessage());
+        LOG.warn("Exception occurred in SourceHandler : {}", cause);
     }
 
     @Override

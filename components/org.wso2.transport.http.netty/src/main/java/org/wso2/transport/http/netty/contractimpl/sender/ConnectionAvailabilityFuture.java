@@ -44,7 +44,7 @@ public class ConnectionAvailabilityFuture {
         socketAvailabilityFuture.addListener(new ChannelFutureListener() {
 
             @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+            public void operationComplete(ChannelFuture channelFuture) {
                 if (isValidChannel(channelFuture)) {
                     socketAvailable = true;
                     if (listener != null && !isSSLEnabled) {

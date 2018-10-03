@@ -36,6 +36,7 @@ import org.wso2.transport.http.netty.contract.ServerConnectorException;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
 import org.wso2.transport.http.netty.contractimpl.DefaultHttpResponseFuture;
 import org.wso2.transport.http.netty.contractimpl.HttpWsServerConnectorFuture;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.MessageStateContext;
 
 import java.io.IOException;
@@ -43,6 +44,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 /**
  * HTTP based representation for HttpCarbonMessage.
@@ -57,15 +59,18 @@ public class HttpCarbonMessage {
     private final ServerConnectorFuture httpOutboundRespFuture = new HttpWsServerConnectorFuture();
     private final DefaultHttpResponseFuture httpOutboundRespStatusFuture = new DefaultHttpResponseFuture();
     private final Observable contentObservable = new DefaultObservable();
+    private Semaphore writingBlocker;
     private IOException ioException;
     private MessageStateContext messageStateContext;
 
 
     private long sequenceId; //Keep track of request/response order
     private ChannelHandlerContext sourceContext;
+    private ChannelHandlerContext targetContext;
     private HttpPipeliningFuture pipeliningFuture;
     private boolean keepAlive;
     private boolean pipeliningNeeded;
+    private boolean passthrough = false;
 
     public HttpCarbonMessage(HttpMessage httpMessage, Listener contentListener) {
         this.httpMessage = httpMessage;
@@ -83,7 +88,6 @@ public class HttpCarbonMessage {
         this.httpMessage = httpMessage;
         setBlockingEntityCollector(new BlockingEntityCollector(Constants.ENDPOINT_TIMEOUT));
     }
-
     /**
      * Add http content to HttpCarbonMessage.
      *
@@ -98,16 +102,9 @@ public class HttpCarbonMessage {
                 removeMessageFuture();
                 throw new RuntimeException(this.getIoException());
             }
-            contentObservable.notifyGetListener(httpContent);
             blockingEntityCollector.addHttpContent(httpContent);
-            if (messageFuture.isMessageListenerSet()) {
-                messageFuture.notifyMessageListener(blockingEntityCollector.getHttpContent());
-            }
-            // We remove the feature as the message has reached it life time. If there is a need
-            // for using the same message again, we need to set the future again and restart
-            // the life-cycle.
-            if (httpContent instanceof LastHttpContent) {
-                removeMessageFuture();
+            if (messageFuture.isMessageListenerSet() && isWritableDuringPasssthrough()) {
+                notifyListener();
             }
         } else {
             if (ioException != null) {
@@ -115,6 +112,31 @@ public class HttpCarbonMessage {
                 throw new RuntimeException(this.getIoException());
             } else {
                 blockingEntityCollector.addHttpContent(httpContent);
+            }
+        }
+    }
+
+    /**
+     * Checks if it is a passthrough and writingBlocker and targetContext are not null before checking for writability.
+     *
+     * @return false if the channel is not writable in a passthrough scenario or if targetContext is not null or when
+     * the {@link org.wso2.transport.http.netty.contractimpl.common.OutboundThrottlingHandler} is not in the pipeline.
+     */
+    private boolean isWritableDuringPasssthrough() {
+        return !passthrough || writingBlocker == null || targetContext == null || targetContext.channel().isWritable();
+    }
+
+    /**
+     * To notify the listener of the messageFuture to write the data to the socket.
+     */
+    public synchronized void notifyListener() {
+        //we shouldn't retrieve http content if messageFuture is null
+        if (messageFuture != null) {
+            HttpContent httpContent = getHttpContent();
+            messageFuture.notifyMessageListener(httpContent);
+            if (httpContent instanceof LastHttpContent) {
+                removeMessageFuture();
+                passthrough = false;
             }
         }
     }
@@ -250,8 +272,12 @@ public class HttpCarbonMessage {
         }
     }
 
+    /**
+     * Removes the messageFuture when the message has reached it life time. If there is a need using the same message.
+     * again, future has to be set again and life-cycle restarted.
+     */
     public synchronized void removeMessageFuture() {
-        this.messageFuture = null;
+        messageFuture = null;
     }
 
     public Map<String, Object> getProperties() {
@@ -290,6 +316,9 @@ public class HttpCarbonMessage {
 
     public HttpResponseFuture respond(HttpCarbonMessage httpCarbonMessage) throws ServerConnectorException {
         httpOutboundRespFuture.notifyHttpListener(httpCarbonMessage);
+        //Copies the source context from the request to the response. Required for outbound throttling.
+        httpCarbonMessage.setSourceContext(sourceContext);
+        Util.setHttpCarbonMessageToOutboundThrottlingHandler(httpCarbonMessage, sourceContext);
         return httpOutboundRespStatusFuture;
     }
 
@@ -379,7 +408,10 @@ public class HttpCarbonMessage {
      * @return netty request message
      */
     public HttpRequest getNettyHttpRequest() {
-        return (HttpRequest) this.httpMessage;
+        if (httpMessage instanceof HttpRequest) {
+            return (HttpRequest) this.httpMessage;
+        }
+        return null;
     }
 
     /**
@@ -387,7 +419,10 @@ public class HttpCarbonMessage {
      * @return netty response message
      */
     public HttpResponse getNettyHttpResponse() {
-        return (HttpResponse) this.httpMessage;
+        if (httpMessage instanceof HttpResponse) {
+            return (HttpResponse) this.httpMessage;
+        }
+        return null;
     }
 
     public synchronized IOException getIoException() {
@@ -414,12 +449,45 @@ public class HttpCarbonMessage {
         this.sequenceId = sequenceId;
     }
 
+    /**
+     * @return the source handler context for this message.
+     */
     public ChannelHandlerContext getSourceContext() {
         return sourceContext;
     }
 
+    /**
+     * @param sourceContext the source handler context for this message.
+     */
     public void setSourceContext(ChannelHandlerContext sourceContext) {
         this.sourceContext = sourceContext;
+    }
+
+    /**
+     * @return the target handler context for this message.
+     */
+    public ChannelHandlerContext getTargetContext() {
+        return targetContext;
+    }
+
+    /**
+     * @param targetContext The target handler context.
+     */
+    public void setTargetContext(ChannelHandlerContext targetContext) {
+        this.targetContext = targetContext;
+    }
+
+    /**
+     * @return the sourceContext if this message is {@link HttpCarbonRequest} and targetContext if this message is
+     * {@link HttpCarbonResponse}
+     */
+    public ChannelHandlerContext getChannelContext() {
+        if (httpMessage instanceof HttpRequest) {
+            return targetContext;
+        } else if (httpMessage instanceof HttpResponse) {
+            return sourceContext;
+        }
+        return null;
     }
 
     public boolean isKeepAlive() {
@@ -444,5 +512,39 @@ public class HttpCarbonMessage {
 
     public void setPipeliningFuture(HttpPipeliningFuture pipeliningFuture) {
         this.pipeliningFuture = pipeliningFuture;
+    }
+
+    /**
+     * @return the semaphore used for outbound throttling.
+     */
+    public Semaphore getWritingBlocker() {
+        return writingBlocker;
+    }
+
+    /**
+     * This semaphore is set in the
+     * {@link org.wso2.transport.http.netty.contractimpl.common.OutboundThrottlingHandler} otherwise it should be null.
+     *
+     * @param writingBlocker the semaphore used for outbound throttling.
+     */
+    public void setWritingBlocker(Semaphore writingBlocker) {
+        this.writingBlocker = writingBlocker;
+    }
+
+    /**
+     * @return true if it is a passthrough(when message body is not built).
+     */
+    public synchronized boolean isPassthrough() {
+        return passthrough;
+    }
+
+    /**
+     * This value is to be set when the message is to be sent to the consumer without building/processing the message
+     * in the application layer.
+     *
+     * @param passthrough if the message is a passthrough.
+     */
+    public synchronized void setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
     }
 }
