@@ -172,6 +172,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
         }
         serverPipeline.addLast(Constants.SSL_COMPLETION_HANDLER,
                 new SslHandshakeCompletionHandlerForServer(this, serverPipeline));
+        serverPipeline.addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
     }
 
     /**
@@ -215,6 +216,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
             serverPipeline.addBefore(Constants.HTTP_SOURCE_HANDLER, Constants.IDLE_STATE_HANDLER,
                                      new IdleStateHandler(0, 0, socketIdleTimeout, TimeUnit.MILLISECONDS));
         }
+        serverPipeline.addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
     }
 
     /**
@@ -256,6 +258,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
            large upgrade requests. Requests will be propagated to next handlers if no upgrade has been attempted */
         pipeline.addLast(Constants.HTTP2_TO_HTTP_FALLBACK_HANDLER,
                          new Http2ToHttpFallbackHandler(this));
+        pipeline.addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
     }
 
     public void setServerConnectorFuture(ServerConnectorFuture serverConnectorFuture) {
@@ -374,6 +377,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
                         Constants.HTTP2_SOURCE_CONNECTION_HANDLER,
                         new Http2SourceConnectionHandlerBuilder(
                                 interfaceId, serverConnectorFuture, serverName, channelInitializer).build());
+                ctx.pipeline().addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
             } else if (ApplicationProtocolNames.HTTP_1_1.equals(protocol)) {
                 // handles pipeline for HTTP/1.x requests after SSL handshake
                 configureHttpPipeline(ctx.pipeline(), Constants.HTTP_SCHEME);
