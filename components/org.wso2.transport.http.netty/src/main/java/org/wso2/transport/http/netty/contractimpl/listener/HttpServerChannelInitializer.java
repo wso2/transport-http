@@ -172,7 +172,6 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
         }
         serverPipeline.addLast(Constants.SSL_COMPLETION_HANDLER,
                 new SslHandshakeCompletionHandlerForServer(this, serverPipeline));
-        serverPipeline.addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
     }
 
     /**
