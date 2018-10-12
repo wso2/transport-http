@@ -257,7 +257,6 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
            large upgrade requests. Requests will be propagated to next handlers if no upgrade has been attempted */
         pipeline.addLast(Constants.HTTP2_TO_HTTP_FALLBACK_HANDLER,
                          new Http2ToHttpFallbackHandler(this));
-        pipeline.addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
     }
 
     public void setServerConnectorFuture(ServerConnectorFuture serverConnectorFuture) {
@@ -376,7 +375,6 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
                         Constants.HTTP2_SOURCE_CONNECTION_HANDLER,
                         new Http2SourceConnectionHandlerBuilder(
                                 interfaceId, serverConnectorFuture, serverName, channelInitializer).build());
-                ctx.pipeline().addLast(Constants.EXCEPTION_HANDLER, new ExceptionHandler());
             } else if (ApplicationProtocolNames.HTTP_1_1.equals(protocol)) {
                 // handles pipeline for HTTP/1.x requests after SSL handshake
                 configureHttpPipeline(ctx.pipeline(), Constants.HTTP_SCHEME);

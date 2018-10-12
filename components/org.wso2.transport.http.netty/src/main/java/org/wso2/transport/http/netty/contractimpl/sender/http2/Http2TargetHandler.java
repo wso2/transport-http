@@ -464,6 +464,6 @@ public class Http2TargetHandler extends ChannelDuplexHandler {
         if (ctx != null && ctx.channel().isActive()) {
             ctx.close();
         }
-        LOG.warn("Exception occurred in HTTP/2 TargetHandler : {}", cause.getMessage());
+        LOG.error("Exception occurred in HTTP/2 TargetHandler : {}", cause.getMessage());
     }
 }

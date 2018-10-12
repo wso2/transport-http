@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A class responsible for handling exceptions occurred in inbound pipeline. This should be placed at the tail
  * of the pipeline. When engaged channel handlers have not implemented exceptionCaught method, this class
- * handle them generally.
+ * handles them generally.
  */
 public class ExceptionHandler extends ChannelInboundHandlerAdapter {
 
@@ -43,6 +43,6 @@ public class ExceptionHandler extends ChannelInboundHandlerAdapter {
                     HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR))
                     .addListener(ChannelFutureListener.CLOSE);
         }
-        LOG.warn("Exception occurred in inbound channel pipeline : {}", cause.getMessage());
+        LOG.error("Exception occurred in inbound channel pipeline : {}", cause.getMessage());
     }
 }
