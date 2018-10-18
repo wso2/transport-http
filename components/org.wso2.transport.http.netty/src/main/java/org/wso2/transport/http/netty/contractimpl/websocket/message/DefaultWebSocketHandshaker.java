@@ -218,7 +218,7 @@ public class DefaultWebSocketHandshaker implements WebSocketHandshaker {
         } else {
             pipeline.remove(Constants.IDLE_STATE_HANDLER);
         }
-        pipeline.addLast(Constants.WEBSOCKET_FRAME_HANDLER, frameHandler);
+        pipeline.addBefore(Constants.EXCEPTION_HANDLER, Constants.WEBSOCKET_FRAME_HANDLER, frameHandler);
         frameHandler.getWebSocketConnection().stopReadingFrames();
         pipeline.fireChannelActive();
     }
