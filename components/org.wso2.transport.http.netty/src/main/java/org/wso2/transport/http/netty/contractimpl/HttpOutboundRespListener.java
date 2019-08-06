@@ -71,23 +71,26 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
 
     @Override
     public void onMessage(HttpCarbonMessage outboundResponseMsg) {
-        BackPressureHandler backpressureHandler = Util.getBackPressureHandler(sourceContext);
-        Util.setBackPressureListener(outboundResponseMsg, backpressureHandler, outboundResponseMsg.getTargetContext());
-        if (handlerExecutor != null) {
-            handlerExecutor.executeAtSourceResponseReceiving(outboundResponseMsg);
-        }
+        this.sourceContext.channel().eventLoop().execute(() -> {
+            BackPressureHandler backpressureHandler = Util.getBackPressureHandler(sourceContext);
+            Util.setBackPressureListener(outboundResponseMsg, backpressureHandler,
+                                         outboundResponseMsg.getTargetContext());
+            if (handlerExecutor != null) {
+                handlerExecutor.executeAtSourceResponseReceiving(outboundResponseMsg);
+            }
 
-        outboundResponseMsg.getHttpContentAsync().setMessageListener(httpContent -> {
-            Util.checkUnWritabilityAndNotify(sourceContext, backpressureHandler);
-            this.sourceContext.channel().eventLoop().execute(() -> {
-                try {
-                    writeOutboundResponse(outboundResponseMsg, httpContent);
-                } catch (Exception exception) {
-                    String errorMsg = "Failed to send the outbound response : "
-                            + exception.getMessage().toLowerCase(Locale.ENGLISH);
-                    LOG.error(errorMsg, exception);
-                    inboundRequestMsg.getHttpOutboundRespStatusFuture().notifyHttpListener(exception);
-                }
+            outboundResponseMsg.getHttpContentAsync().setMessageListener(httpContent -> {
+                Util.checkUnWritabilityAndNotify(sourceContext, backpressureHandler);
+                this.sourceContext.channel().eventLoop().execute(() -> {
+                    try {
+                        writeOutboundResponse(outboundResponseMsg, httpContent);
+                    } catch (Exception exception) {
+                        String errorMsg = "Failed to send the outbound response : "
+                                + exception.getMessage().toLowerCase(Locale.ENGLISH);
+                        LOG.error(errorMsg, exception);
+                        inboundRequestMsg.getHttpOutboundRespStatusFuture().notifyHttpListener(exception);
+                    }
+                });
             });
         });
     }
