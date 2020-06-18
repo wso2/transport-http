@@ -30,6 +30,7 @@ import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -54,8 +55,10 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.HttpResponseFuture;
 import org.wso2.transport.http.netty.contract.config.ChunkConfig;
+import org.wso2.transport.http.netty.contract.config.ConfigurationBuilder;
 import org.wso2.transport.http.netty.contract.config.ForwardedExtensionConfig;
 import org.wso2.transport.http.netty.contract.config.KeepAliveConfig;
+import org.wso2.transport.http.netty.contract.config.ListenerConfiguration;
 import org.wso2.transport.http.netty.contract.config.ProxyServerConfiguration;
 import org.wso2.transport.http.netty.contract.config.SenderConfiguration;
 import org.wso2.transport.http.netty.contract.exceptions.ConfigurationException;
@@ -91,6 +94,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -197,7 +201,25 @@ public class Util {
                                           ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME));
         }
 
-        outboundNettyResponse.headers().add(outboundResponseMsg.getHeaders());
+        Set<ListenerConfiguration> listenerConfigurations =
+                ConfigurationBuilder.getInstance().getConfiguration().getListenerConfigurations();
+
+        HttpHeaders headers = outboundResponseMsg.getHeaders();
+
+        listenerConfigurations.forEach(listenerConfiguration -> {
+            if (Constants.HTTPS_SCHEME.equalsIgnoreCase(listenerConfiguration.getScheme())) {
+                if (listenerConfiguration.getStrictTransportSecurityHeader() != null) {
+                    headers.add(Constants.HTTP_STRICT_TRANSPORT_SECURITY_HEADER, listenerConfiguration
+                            .getStrictTransportSecurityHeader());
+                }
+            } else {
+                if (listenerConfiguration.getStrictTransportSecurityHeader() != null) {
+                    LOG.warn("HTTP Strict Transport Security header must be used with https scheme");
+                }
+            }
+        });
+
+        outboundNettyResponse.headers().add(headers);
     }
 
     public static HttpResponseStatus getHttpResponseStatus(HttpCarbonMessage msg) {

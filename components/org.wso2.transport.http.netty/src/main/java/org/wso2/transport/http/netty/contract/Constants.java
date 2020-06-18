@@ -129,6 +129,7 @@ public final class Constants {
     public static final String X_FORWARDED_BY = "x-forwarded-by";
     public static final String X_FORWARDED_HOST = "x-forwarded-host";
     public static final String X_FORWARDED_PROTO = "x-forwarded-proto";
+    public static final String HTTP_STRICT_TRANSPORT_SECURITY_HEADER = "Strict-Transport-Security";
 
     public static final String HEADER_VAL_100_CONTINUE = "100-continue";
     public static final String NO_ENTITY_BODY = "NO_ENTITY_BODY";
