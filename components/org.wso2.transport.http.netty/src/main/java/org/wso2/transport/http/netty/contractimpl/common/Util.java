@@ -135,6 +135,8 @@ public class Util {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
+    private static final Set<ListenerConfiguration>
+            listenerConfigurations = ConfigurationBuilder.getInstance().getConfiguration().getListenerConfigurations();
 
     private static String getStringValue(HttpCarbonMessage msg, String key, String defaultValue) {
         String value = (String) msg.getProperty(key);
@@ -200,9 +202,6 @@ public class Util {
             outboundResponseMsg.setHeader(HttpHeaderNames.DATE.toString(),
                                           ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME));
         }
-
-        Set<ListenerConfiguration> listenerConfigurations =
-                ConfigurationBuilder.getInstance().getConfiguration().getListenerConfigurations();
 
         HttpHeaders headers = outboundResponseMsg.getHeaders();
 

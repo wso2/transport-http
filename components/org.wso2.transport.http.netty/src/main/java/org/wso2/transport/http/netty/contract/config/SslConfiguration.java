@@ -49,6 +49,12 @@ public class SslConfiguration {
     private List<Parameter> parameters = new ArrayList<>();
     private SSLConfig sslConfig = new SSLConfig();
     private static final Logger LOG = LoggerFactory.getLogger(SslConfiguration.class);
+    private String keyStoreFile;
+    private String keyStorePass;
+    private String certPass;
+    private String strictTransportSecurityHeader;
+    private String trustStoreFile;
+    private String trustStorePass;
 
     public void setKeyStoreFile(String keyStoreFile) {
         sslConfig.setKeyStore(new File(Util.substituteVariables(keyStoreFile)));
@@ -284,5 +290,29 @@ public class SslConfiguration {
             }
         }
         return sslConfig;
+    }
+
+    public String getStrictTransportSecurityHeader() {
+        return strictTransportSecurityHeader;
+    }
+
+    public void setStrictTransportSecurityHeader(String strictTransportSecurityHeader) {
+        this.strictTransportSecurityHeader = strictTransportSecurityHeader;
+    }
+
+    public void setCertPass(String certPass) {
+        this.certPass = certPass;
+    }
+
+    public String getCertPass() {
+        return certPass;
+    }
+
+    public String getTrustStoreFile() {
+        return trustStoreFile;
+    }
+
+    public String getTrustStorePass() {
+        return trustStorePass;
     }
 }

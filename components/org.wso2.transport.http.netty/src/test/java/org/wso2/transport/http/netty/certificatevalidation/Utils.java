@@ -96,6 +96,9 @@ import java.util.stream.Collectors;
 import static org.testng.Assert.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.wso2.transport.http.netty.contract.Constants.HTTPS_SCHEME;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_SCHEME;
 import static org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.Constants.BOUNCY_CASTLE_PROVIDER;
 
 /**
@@ -335,7 +338,8 @@ class Utils {
         List<Parameter> serverParams = new ArrayList<>(1);
         Parameter paramServerCiphers = new Parameter("ciphers", "TLS_RSA_WITH_AES_128_CBC_SHA");
         serverParams.add(paramServerCiphers);
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080,
+                DEFAULT_SCHEME, DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
         listenerConfiguration.setParameters(serverParams);
         listenerConfiguration.setPort(TestUtil.SERVER_PORT3);
         listenerConfiguration.setKeyStoreFile(TestUtil.getAbsolutePath(keyStore));

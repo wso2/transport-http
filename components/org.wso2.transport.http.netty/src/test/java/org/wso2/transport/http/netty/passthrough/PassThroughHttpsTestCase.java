@@ -42,6 +42,9 @@ import java.net.URI;
 import java.util.Properties;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_SCHEME;
 
 /**
  * A test case for https pass-through transport.
@@ -59,7 +62,8 @@ public class PassThroughHttpsTestCase {
     public void setUp() {
         httpWsConnectorFactory = new DefaultHttpWsConnectorFactory();
 
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080,
+                DEFAULT_SCHEME, DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
         listenerConfiguration.setKeyStoreFile(TestUtil.getAbsolutePath(TestUtil.KEY_STORE_FILE_PATH));
         listenerConfiguration.setKeyStorePass(TestUtil.KEY_STORE_PASSWORD);
         listenerConfiguration.setPort(TestUtil.SERVER_CONNECTOR_PORT);

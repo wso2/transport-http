@@ -48,6 +48,9 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.wso2.transport.http.netty.contract.Constants.HTTPS_SCHEME;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_SCHEME;
 
 /**
  * A test for hostname verification. Contains two test scenarios to test certificates with CN included and not included.
@@ -142,7 +145,8 @@ public class HostnameVerificationTest {
     }
 
     private ListenerConfiguration setListenerConfiguration(int port, String keyStore, String keyStorePassword) {
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080,
+                DEFAULT_SCHEME, DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
         listenerConfiguration.setPort(port);
         listenerConfiguration.setKeyStoreFile(TestUtil.getAbsolutePath(keyStore));
         listenerConfiguration.setKeyStorePass(keyStorePassword);

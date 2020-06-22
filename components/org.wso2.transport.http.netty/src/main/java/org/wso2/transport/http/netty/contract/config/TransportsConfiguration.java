@@ -28,6 +28,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_SCHEME;
+
 /**
  * JAXB representation of the Netty transport configuration.
  */
@@ -42,7 +46,8 @@ public class TransportsConfiguration {
     @Deprecated
     public static TransportsConfiguration getDefault() {
         TransportsConfiguration defaultConfig = new TransportsConfiguration();
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080,
+                DEFAULT_SCHEME, DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
         HashSet<ListenerConfiguration> listenerConfigurations = new HashSet<>();
         listenerConfigurations.add(listenerConfiguration);
         defaultConfig.setListenerConfigurations(listenerConfigurations);

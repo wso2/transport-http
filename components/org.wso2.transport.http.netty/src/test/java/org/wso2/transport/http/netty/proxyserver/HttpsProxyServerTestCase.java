@@ -40,6 +40,9 @@ import static org.wso2.transport.http.netty.contract.Constants.HTTPS_SCHEME;
 import static org.wso2.transport.http.netty.contract.Constants.HTTP_HOST;
 import static org.wso2.transport.http.netty.contract.Constants.HTTP_PORT;
 import static org.wso2.transport.http.netty.contract.Constants.PROTOCOL;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_SCHEME;
 
 /**
  * A test for connecting to a proxy server over HTTPS.
@@ -56,7 +59,9 @@ public class HttpsProxyServerTestCase {
     }
 
     private ListenerConfiguration getListenerConfiguration() {
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration =
+                new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080, DEFAULT_SCHEME,
+                        DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
         listenerConfiguration.setPort(TestUtil.SERVER_PORT1);
         listenerConfiguration.setScheme(HTTPS_SCHEME);
         listenerConfiguration.setKeyStoreFile(TestUtil.getAbsolutePath(TestUtil.KEY_STORE_FILE_PATH));

@@ -37,6 +37,9 @@ import org.wso2.transport.http.netty.util.TestUtil;
 import java.util.HashMap;
 
 import static org.wso2.transport.http.netty.contract.Constants.HTTPS_SCHEME;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_SCHEME;
 
 /**
  * Tests for mutual ssl
@@ -67,7 +70,8 @@ public class MutualSSLTestCase {
     }
 
     private ListenerConfiguration getListenerConfiguration() {
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080,
+                DEFAULT_SCHEME, DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
         listenerConfiguration.setPort(TestUtil.SERVER_PORT3);
         String verifyClient = "require";
         listenerConfiguration.setVerifyClient(verifyClient);

@@ -31,17 +31,6 @@ public class ListenerConfiguration extends SslConfiguration {
     public static final String DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE = "max-age=15768000;" +
             " includeSubDomains";
 
-    /**
-     * @deprecated
-     * @return the default listener configuration.
-     */
-    @Deprecated
-    public static ListenerConfiguration getDefault() {
-        ListenerConfiguration defaultConfig;
-        defaultConfig = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080, DEFAULT_SCHEME,
-                DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE);
-        return defaultConfig;
-    }
     private String id = DEFAULT_KEY;
     private String host = "0.0.0.0";
     private int port = 9090;
@@ -59,10 +48,6 @@ public class ListenerConfiguration extends SslConfiguration {
     private boolean pipeliningEnabled;
     private boolean webSocketCompressionEnabled;
     private long pipeliningLimit;
-    private String strictTransportSecurityHeader;
-    private String keyStoreFile;
-    private String keyStorePass;
-    private String certPass;
 
     public ListenerConfiguration() {
     }
@@ -78,7 +63,7 @@ public class ListenerConfiguration extends SslConfiguration {
         this.host = host;
         this.port = port;
         super.setScheme(scheme);
-        this.strictTransportSecurityHeader = hstsHeader;
+        super.setStrictTransportSecurityHeader(hstsHeader);
     }
 
     public String getHost() {
@@ -216,31 +201,5 @@ public class ListenerConfiguration extends SslConfiguration {
 
     public void setWebSocketCompressionEnabled(boolean webSocketCompressionEnabled) {
         this.webSocketCompressionEnabled = webSocketCompressionEnabled;
-    }
-
-    public String getStrictTransportSecurityHeader() {
-        return strictTransportSecurityHeader;
-    }
-
-    public void setStrictTransportSecurityHeader(String strictTransportSecurityHeader) {
-        this.strictTransportSecurityHeader = strictTransportSecurityHeader;
-    }
-
-    public void setKeyStoreFile(String keyStoreFile) {
-        this.keyStoreFile = keyStoreFile;
-        super.setKeyStoreFile(this.keyStoreFile);
-    }
-
-    public void setKeyStorePass(String keyStorePass) {
-        this.keyStorePass = keyStorePass;
-        super.setKeyStorePass(this.keyStorePass);
-    }
-
-    public void setCertPass(String certPass) {
-        this.certPass = certPass;
-    }
-
-    public String getCertPass() {
-        return certPass;
     }
 }

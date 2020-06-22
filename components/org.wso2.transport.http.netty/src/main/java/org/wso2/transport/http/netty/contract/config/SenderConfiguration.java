@@ -47,8 +47,6 @@ public class SenderConfiguration extends SslConfiguration {
     private String httpVersion = "1.1";
     private ProxyServerConfiguration proxyServerConfiguration;
     private PoolConfiguration poolConfiguration;
-    private String trustStoreFile;
-    private String trustStorePass;
 
     private ForwardedExtensionConfig forwardedExtensionConfig = ForwardedExtensionConfig.DISABLE;
 
@@ -144,25 +142,5 @@ public class SenderConfiguration extends SslConfiguration {
 
     public void setForwardedExtensionConfig(ForwardedExtensionConfig forwardedExtensionEnabled) {
         this.forwardedExtensionConfig = forwardedExtensionEnabled;
-    }
-
-    public String getTrustStoreFile() {
-        return trustStoreFile;
-    }
-
-    @Override
-    public void setTrustStoreFile(String trustStoreFile) {
-        this.trustStoreFile = trustStoreFile;
-        super.setTrustStoreFile(trustStoreFile);
-    }
-
-    public String getTrustStorePass() {
-        return trustStorePass;
-    }
-
-    @Override
-    public void setTrustStorePass(String trustStorePass) {
-        this.trustStorePass = trustStorePass;
-        super.setTrustStorePass(this.trustStorePass);
     }
 }
