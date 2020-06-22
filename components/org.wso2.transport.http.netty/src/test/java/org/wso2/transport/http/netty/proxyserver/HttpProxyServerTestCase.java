@@ -44,6 +44,7 @@ import static org.wso2.transport.http.netty.contract.Constants.HTTP_POST_METHOD;
 import static org.wso2.transport.http.netty.contract.Constants.HTTP_SCHEME;
 import static org.wso2.transport.http.netty.contract.Constants.IS_PROXY_ENABLED;
 import static org.wso2.transport.http.netty.contract.Constants.PROTOCOL;
+import static org.wso2.transport.http.netty.contract.config.ListenerConfiguration.DEFAULT_KEY;
 
 /**
  * A test for connecting to a proxy server over HTTP.
@@ -70,7 +71,7 @@ public class HttpProxyServerTestCase {
     }
 
     private ListenerConfiguration getListenerConfiguration() {
-        ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
+        ListenerConfiguration listenerConfiguration = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080);
         listenerConfiguration.setPort(TestUtil.SERVER_PORT1);
         return listenerConfiguration;
     }
