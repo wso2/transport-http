@@ -40,6 +40,8 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.Http2Exception;
 import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.HttpConversionUtil;
+import io.netty.handler.ssl.ApplicationProtocolConfig;
+import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.ReferenceCountedOpenSslContext;
 import io.netty.handler.ssl.ReferenceCountedOpenSslEngine;
 import io.netty.handler.ssl.SslContext;
@@ -95,6 +97,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLParameters;
@@ -114,8 +117,7 @@ import static org.wso2.transport.http.netty.contract.Constants.MUTUAL_SSL_HANDSH
 import static org.wso2.transport.http.netty.contract.Constants.MUTUAL_SSL_PASSED;
 import static org.wso2.transport.http.netty.contract.Constants.OK_200;
 import static org.wso2.transport.http.netty.contract.Constants.PROTOCOL;
-import static org.wso2.transport.http.netty.contract.Constants
-        .REMOTE_CLIENT_CLOSED_WHILE_WRITING_OUTBOUND_RESPONSE_HEADERS;
+import static org.wso2.transport.http.netty.contract.Constants.REMOTE_CLIENT_CLOSED_WHILE_WRITING_OUTBOUND_RESPONSE_HEADERS;
 import static org.wso2.transport.http.netty.contract.Constants.TO;
 import static org.wso2.transport.http.netty.contract.Constants.URL_AUTHORITY;
 import static org.wso2.transport.http.netty.contract.config.KeepAliveConfig.ALWAYS;
@@ -416,6 +418,23 @@ public class Util {
                 .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
         SslHandler sslHandler = sslContext.newHandler(socketChannel.alloc(), host, port);
         return sslHandler.engine();
+    }
+
+    /**
+     * Creates an insecure ssl engine for clients connecting over HTTP2
+     *
+     * @return insecure ssl context
+     * @throws SSLException if any error occurs in the SSL connection
+     */
+    public static SslContext createInsecureSslEngineForHttp2() throws SSLException {
+        SslContextBuilder sslContextBuilder = SslContextBuilder.forClient().sslProvider(SslProvider.OPENSSL)
+                .trustManager(InsecureTrustManagerFactory.INSTANCE);
+        sslContextBuilder.applicationProtocolConfig(
+                new ApplicationProtocolConfig(ApplicationProtocolConfig.Protocol.ALPN,
+                        ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                        ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                        ApplicationProtocolNames.HTTP_2, ApplicationProtocolNames.HTTP_1_1));
+        return sslContextBuilder.build();
     }
 
     /**
