@@ -42,7 +42,6 @@ import static org.wso2.transport.http.netty.util.Http2Util.getH2ListenerConfigs;
 public class DisableSslTest {
     private static final Logger LOG = LoggerFactory.getLogger(TestHttp2WithALPN.class);
     private ServerConnector serverConnector;
-    private HttpClientConnector http1ClientConnector;
     private HttpClientConnector http2ClientConnector;
     private HttpWsConnectorFactory connectorFactory;
 
@@ -58,13 +57,13 @@ public class DisableSslTest {
 
         connectorFactory = new DefaultHttpWsConnectorFactory();
         http2ClientConnector = connectorFactory
-                .createHttpClientConnector(new HashMap<>(), getSenderConfigs(HTTP_2_0));
+                .createHttpClientConnector(new HashMap<>(), getSenderConfigs());
     }
 
-    public static SenderConfiguration getSenderConfigs(String httpVersion) {
+    public static SenderConfiguration getSenderConfigs() {
         SenderConfiguration senderConfiguration = new SenderConfiguration();
         senderConfiguration.disableSsl();
-        senderConfiguration.setHttpVersion(httpVersion);
+        senderConfiguration.setHttpVersion(HTTP_2_0);
         senderConfiguration.setScheme(HTTPS_SCHEME);
         return senderConfiguration;
     }
