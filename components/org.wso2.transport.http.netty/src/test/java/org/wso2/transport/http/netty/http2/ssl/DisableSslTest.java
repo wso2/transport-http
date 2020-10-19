@@ -39,8 +39,11 @@ import static org.wso2.transport.http.netty.contract.Constants.HTTPS_SCHEME;
 import static org.wso2.transport.http.netty.contract.Constants.HTTP_2_0;
 import static org.wso2.transport.http.netty.util.Http2Util.getH2ListenerConfigs;
 
+/**
+ * Tests the behavior of HTTP2 client with disabled SSL.
+ */
 public class DisableSslTest {
-    private static final Logger LOG = LoggerFactory.getLogger(TestHttp2WithALPN.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DisableSslTest.class);
     private ServerConnector serverConnector;
     private HttpClientConnector http2ClientConnector;
     private HttpWsConnectorFactory connectorFactory;
