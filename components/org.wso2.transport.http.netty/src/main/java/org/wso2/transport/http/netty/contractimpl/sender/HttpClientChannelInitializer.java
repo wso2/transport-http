@@ -39,6 +39,7 @@ import io.netty.handler.ssl.ReferenceCountedOpenSslEngine;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import org.wso2.transport.http.netty.contract.Constants;
+import org.wso2.transport.http.netty.contract.config.InboundMsgSizeValidationConfig;
 import org.wso2.transport.http.netty.contract.config.KeepAliveConfig;
 import org.wso2.transport.http.netty.contract.config.ProxyServerConfiguration;
 import org.wso2.transport.http.netty.contract.config.SenderConfiguration;
@@ -86,6 +87,7 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
     private SenderConfiguration senderConfiguration;
     private ConnectionAvailabilityFuture connectionAvailabilityFuture;
     private SSLHandlerFactory sslHandlerFactory;
+    private final InboundMsgSizeValidationConfig responseSizeValidationConfig;
 
     public HttpClientChannelInitializer(SenderConfiguration senderConfiguration, HttpRoute httpRoute,
             ConnectionManager connectionManager, ConnectionAvailabilityFuture connectionAvailabilityFuture) {
@@ -97,6 +99,7 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
         this.httpRoute = httpRoute;
         this.sslConfig = senderConfiguration.getClientSSLConfig();
         this.connectionAvailabilityFuture = connectionAvailabilityFuture;
+        this.responseSizeValidationConfig = senderConfiguration.getMsgSizeValidationConfig();
 
         String httpVersion = senderConfiguration.getHttpVersion();
         if (Constants.HTTP_2_0.equals(httpVersion)) {
@@ -257,7 +260,10 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
      * @param targetHandler the target handler
      */
     public void configureHttpPipeline(ChannelPipeline pipeline, TargetHandler targetHandler) {
-        pipeline.addLast(Constants.HTTP_CLIENT_CODEC, new HttpClientCodec());
+        HttpClientCodec clientCodec = new HttpClientCodec(responseSizeValidationConfig.getMaxInitialLineLength(),
+                                                          responseSizeValidationConfig.getMaxHeaderSize(),
+                                                          responseSizeValidationConfig.getMaxChunkSize());
+        pipeline.addLast(Constants.HTTP_CLIENT_CODEC, clientCodec);
         addCommonHandlers(pipeline);
         pipeline.addLast(Constants.BACK_PRESSURE_HANDLER, new BackPressureHandler());
         pipeline.addLast(Constants.TARGET_HANDLER, targetHandler);

@@ -90,7 +90,7 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
         serverConnectorBootstrap.addHttpTraceLogHandler(listenerConfig.isHttpTraceLogEnabled());
         serverConnectorBootstrap.addHttpAccessLogHandler(listenerConfig.isHttpAccessLogEnabled());
         serverConnectorBootstrap.addThreadPools(bossGroup, workerGroup);
-        serverConnectorBootstrap.addHeaderAndEntitySizeValidation(listenerConfig.getRequestSizeValidationConfig());
+        serverConnectorBootstrap.addHeaderAndEntitySizeValidation(listenerConfig.getMsgSizeValidationConfig());
         serverConnectorBootstrap.addChunkingBehaviour(listenerConfig.getChunkConfig());
         serverConnectorBootstrap.addKeepAliveBehaviour(listenerConfig.getKeepAliveConfig());
         serverConnectorBootstrap.addServerHeader(listenerConfig.getServerHeader());

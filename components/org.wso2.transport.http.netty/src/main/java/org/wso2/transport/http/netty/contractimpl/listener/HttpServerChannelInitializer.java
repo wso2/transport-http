@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
 import org.wso2.transport.http.netty.contract.config.ChunkConfig;
+import org.wso2.transport.http.netty.contract.config.InboundMsgSizeValidationConfig;
 import org.wso2.transport.http.netty.contract.config.KeepAliveConfig;
-import org.wso2.transport.http.netty.contract.config.RequestSizeValidationConfig;
 import org.wso2.transport.http.netty.contractimpl.common.BackPressureHandler;
 import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.CertificateVerificationException;
@@ -94,7 +94,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     private SslContext keystoreHttp2SslContext;
     private SslContext certAndKeySslContext;
     private ServerConnectorFuture serverConnectorFuture;
-    private RequestSizeValidationConfig reqSizeValidationConfig;
+    private InboundMsgSizeValidationConfig reqSizeValidationConfig;
     private boolean http2Enabled = false;
     private boolean validateCertEnabled;
     private int cacheDelay;
@@ -204,7 +204,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
         if (initialHttpScheme.equals(Constants.HTTP_SCHEME)) {
             serverPipeline.addLast(Constants.HTTP_ENCODER, new HttpResponseEncoder());
             serverPipeline.addLast(Constants.HTTP_DECODER,
-                                   new HttpRequestDecoder(reqSizeValidationConfig.getMaxUriLength(),
+                                   new HttpRequestDecoder(reqSizeValidationConfig.getMaxInitialLineLength(),
                                                           reqSizeValidationConfig.getMaxHeaderSize(),
                                                           reqSizeValidationConfig.getMaxChunkSize()));
 
@@ -249,7 +249,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
         pipeline.addLast(new Http2WithPriorKnowledgeHandler(
                 interfaceId, serverName, serverConnectorFuture, this));
         // Add http2 upgrade decoder and upgrade handler
-        final HttpServerCodec sourceCodec = new HttpServerCodec(reqSizeValidationConfig.getMaxUriLength(),
+        final HttpServerCodec sourceCodec = new HttpServerCodec(reqSizeValidationConfig.getMaxInitialLineLength(),
                                                                 reqSizeValidationConfig.getMaxHeaderSize(),
                                                                 reqSizeValidationConfig.getMaxChunkSize());
 
@@ -332,7 +332,7 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
         this.certAndKeySslContext = sslContext;
     }
 
-    void setReqSizeValidationConfig(RequestSizeValidationConfig reqSizeValidationConfig) {
+    void setReqSizeValidationConfig(InboundMsgSizeValidationConfig reqSizeValidationConfig) {
         this.reqSizeValidationConfig = reqSizeValidationConfig;
     }
 
