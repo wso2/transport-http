@@ -75,7 +75,8 @@
             <class name="org.wso2.transport.http.netty.unitfunction.BlockingEntityCollectorTestCase" />
 
             <class name="org.wso2.transport.http.netty.encoding.ContentEncodingTestCase"/>
-            <class name="org.wso2.transport.http.netty.urilengthvalidation.Status414And413ResponseTest"/>
+            <class name="org.wso2.transport.http.netty.lengthvalidation.RequestLengthValidationTest"/>
+            <class name="org.wso2.transport.http.netty.lengthvalidation.ResponseLengthValidationTest"/>
             <class name="org.wso2.transport.http.netty.http1point0test.HttpOnePointZeroServerConnectorTestCase"/>
             <class name="org.wso2.transport.http.netty.http1point0test.KeepAliveHttpOnePointZeroClientTestCase"/>
             <class name="org.wso2.transport.http.netty.http1point0test.ChunkAutoHttpOnePointZeroClientTestCase"/>
