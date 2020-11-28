@@ -62,6 +62,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 
 import static io.netty.handler.logging.LogLevel.TRACE;
+import static org.wso2.transport.http.netty.contract.Constants.MAX_ENTITY_BODY_VALIDATION_HANDLER;
 import static org.wso2.transport.http.netty.contract.Constants.SECURITY;
 import static org.wso2.transport.http.netty.contract.Constants.SSL;
 import static org.wso2.transport.http.netty.contractimpl.common.Util.setHostNameVerfication;
@@ -265,6 +266,12 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
                                                           responseSizeValidationConfig.getMaxChunkSize());
         pipeline.addLast(Constants.HTTP_CLIENT_CODEC, clientCodec);
         addCommonHandlers(pipeline);
+        pipeline.addLast(Constants.STATUS_LINE_HEADER_LENGTH_VALIDATION_HANDLER,
+                         new StatusLineAndHeaderLengthValidator());
+        if (responseSizeValidationConfig.getMaxEntityBodySize() > -1) {
+            pipeline.addLast(MAX_ENTITY_BODY_VALIDATION_HANDLER,
+                             new ResponseEntityBodySizeValidator(responseSizeValidationConfig.getMaxEntityBodySize()));
+        }
         pipeline.addLast(Constants.BACK_PRESSURE_HANDLER, new BackPressureHandler());
         pipeline.addLast(Constants.TARGET_HANDLER, targetHandler);
     }

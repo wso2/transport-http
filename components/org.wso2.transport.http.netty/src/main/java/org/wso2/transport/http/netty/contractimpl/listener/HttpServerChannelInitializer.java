@@ -69,9 +69,11 @@ import javax.net.ssl.SSLEngine;
 import static org.wso2.transport.http.netty.contract.Constants.ACCESS_LOG;
 import static org.wso2.transport.http.netty.contract.Constants.HTTP_ACCESS_LOG_HANDLER;
 import static org.wso2.transport.http.netty.contract.Constants.HTTP_TRACE_LOG_HANDLER;
+import static org.wso2.transport.http.netty.contract.Constants.MAX_ENTITY_BODY_VALIDATION_HANDLER;
 import static org.wso2.transport.http.netty.contract.Constants.SECURITY;
 import static org.wso2.transport.http.netty.contract.Constants.SSL;
 import static org.wso2.transport.http.netty.contract.Constants.TRACE_LOG_DOWNSTREAM;
+import static org.wso2.transport.http.netty.contract.Constants.URI_HEADER_LENGTH_VALIDATION_HANDLER;
 import static org.wso2.transport.http.netty.contractimpl.common.Util.setSslHandshakeTimeOut;
 
 /**
@@ -218,9 +220,9 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
                 serverPipeline.addLast(HTTP_ACCESS_LOG_HANDLER, new HttpAccessLoggingHandler(ACCESS_LOG));
             }
         }
-        serverPipeline.addLast("uriLengthValidator", new UriAndHeaderLengthValidator(this.serverName));
+        serverPipeline.addLast(URI_HEADER_LENGTH_VALIDATION_HANDLER, new UriAndHeaderLengthValidator(this.serverName));
         if (reqSizeValidationConfig.getMaxEntityBodySize() > -1) {
-            serverPipeline.addLast("maxEntityBodyValidator", new MaxEntityBodyValidator(this.serverName,
+            serverPipeline.addLast(MAX_ENTITY_BODY_VALIDATION_HANDLER, new MaxEntityBodyValidator(this.serverName,
                     reqSizeValidationConfig.getMaxEntityBodySize()));
         }
 
