@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.ServerConnector;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
 import org.wso2.transport.http.netty.contract.config.ChunkConfig;
+import org.wso2.transport.http.netty.contract.config.InboundMsgSizeValidationConfig;
 import org.wso2.transport.http.netty.contract.config.KeepAliveConfig;
-import org.wso2.transport.http.netty.contract.config.RequestSizeValidationConfig;
 import org.wso2.transport.http.netty.contract.config.ServerBootstrapConfiguration;
 import org.wso2.transport.http.netty.contract.exceptions.ServerConnectorException;
 import org.wso2.transport.http.netty.contractimpl.HttpWsServerConnectorFuture;
@@ -43,6 +43,7 @@ import org.wso2.transport.http.netty.internal.HandlerExecutor;
 import org.wso2.transport.http.netty.internal.HttpTransportContextHolder;
 
 import java.net.InetSocketAddress;
+
 import javax.net.ssl.SSLContext;
 
 /**
@@ -140,7 +141,7 @@ public class ServerConnectorBootstrap {
         httpServerChannelInitializer.setCertandKeySslContext(sslContext);
     }
 
-    public void addHeaderAndEntitySizeValidation(RequestSizeValidationConfig requestSizeValidationConfig) {
+    public void addHeaderAndEntitySizeValidation(InboundMsgSizeValidationConfig requestSizeValidationConfig) {
         httpServerChannelInitializer.setReqSizeValidationConfig(requestSizeValidationConfig);
     }
 
