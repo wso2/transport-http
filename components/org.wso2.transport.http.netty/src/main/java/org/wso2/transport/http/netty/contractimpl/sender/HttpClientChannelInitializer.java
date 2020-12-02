@@ -127,7 +127,6 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
         // e.g. SSL handler
         ChannelPipeline clientPipeline = socketChannel.pipeline();
         configureProxyServer(clientPipeline);
-        HttpClientCodec sourceCodec = new HttpClientCodec();
         targetHandler = new TargetHandler();
         targetHandler.setHttp2TargetHandler(http2TargetHandler);
         targetHandler.setKeepAliveConfig(getKeepAliveConfig());
@@ -137,7 +136,7 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
             } else if (senderConfiguration.isForceHttp2()) {
                 configureHttp2Pipeline(clientPipeline);
             } else {
-                configureHttp2UpgradePipeline(clientPipeline, sourceCodec, targetHandler);
+                configureHttp2UpgradePipeline(clientPipeline, targetHandler);
             }
         } else {
             if (sslConfig != null) {
@@ -227,17 +226,19 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
      * Creates the pipeline for handing http2 upgrade.
      *
      * @param pipeline      the client channel pipeline
-     * @param sourceCodec   the source codec handler
      * @param targetHandler the target handler
      */
-    private void configureHttp2UpgradePipeline(ChannelPipeline pipeline, HttpClientCodec sourceCodec,
-                                               TargetHandler targetHandler) {
-        pipeline.addLast(sourceCodec);
+    private void configureHttp2UpgradePipeline(ChannelPipeline pipeline, TargetHandler targetHandler) {
+        HttpClientCodec sourceCodec = new HttpClientCodec(responseSizeValidationConfig.getMaxInitialLineLength(),
+                                                          responseSizeValidationConfig.getMaxHeaderSize(),
+                                                          responseSizeValidationConfig.getMaxChunkSize());
+        pipeline.addLast(Constants.HTTP_CLIENT_CODEC, sourceCodec);
         addCommonHandlers(pipeline);
         Http2ClientUpgradeCodec upgradeCodec = new Http2ClientUpgradeCodec(http2ConnectionHandler);
         HttpClientUpgradeHandler upgradeHandler = new HttpClientUpgradeHandler(sourceCodec, upgradeCodec,
-                Integer.MAX_VALUE);
+                                                                               Integer.MAX_VALUE);
         pipeline.addLast(Constants.HTTP2_UPGRADE_HANDLER, upgradeHandler);
+        addResponseLimitValidationHandlers(pipeline);
         pipeline.addLast(Constants.TARGET_HANDLER, targetHandler);
     }
 
@@ -266,14 +267,18 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
                                                           responseSizeValidationConfig.getMaxChunkSize());
         pipeline.addLast(Constants.HTTP_CLIENT_CODEC, clientCodec);
         addCommonHandlers(pipeline);
+        addResponseLimitValidationHandlers(pipeline);
+        pipeline.addLast(Constants.BACK_PRESSURE_HANDLER, new BackPressureHandler());
+        pipeline.addLast(Constants.TARGET_HANDLER, targetHandler);
+    }
+
+    private void addResponseLimitValidationHandlers(ChannelPipeline pipeline) {
         pipeline.addLast(Constants.STATUS_LINE_HEADER_LENGTH_VALIDATION_HANDLER,
                          new StatusLineAndHeaderLengthValidator());
         if (responseSizeValidationConfig.getMaxEntityBodySize() > -1) {
             pipeline.addLast(MAX_ENTITY_BODY_VALIDATION_HANDLER,
                              new ResponseEntityBodySizeValidator(responseSizeValidationConfig.getMaxEntityBodySize()));
         }
-        pipeline.addLast(Constants.BACK_PRESSURE_HANDLER, new BackPressureHandler());
-        pipeline.addLast(Constants.TARGET_HANDLER, targetHandler);
     }
 
     /**
