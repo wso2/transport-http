@@ -74,6 +74,7 @@ public class HttpCarbonMessage {
     private boolean pipeliningEnabled;
     private boolean passthrough = false;
     private boolean lastHttpContentArrived = false;
+    private boolean streaming = false;
     private String httpVersion;
     private String httpMethod;
     private String requestUrl;
@@ -510,6 +511,14 @@ public class HttpCarbonMessage {
 
     public boolean isPipeliningEnabled() {
         return pipeliningEnabled;
+    }
+
+    public boolean isStreaming() {
+        return streaming;
+    }
+
+    public void setStreaming(boolean streaming) {
+        this.streaming = streaming;
     }
 
     /**

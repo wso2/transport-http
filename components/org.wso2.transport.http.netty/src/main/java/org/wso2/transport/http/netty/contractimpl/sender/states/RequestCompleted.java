@@ -80,8 +80,11 @@ public class RequestCompleted implements SenderState {
         if (targetHandler.getCause() != null) {
             message = targetHandler.getCause().getMessage();
         }
+
         httpResponseFuture.notifyHttpListener(new ServerConnectorException(message));
-        LOG.error(message);
+        if (!targetHandler.getInboundResponseMsg().isStreaming()) {
+            LOG.error(message);
+        }
     }
 
     @Override

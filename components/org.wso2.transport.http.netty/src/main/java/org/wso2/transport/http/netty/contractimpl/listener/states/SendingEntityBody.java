@@ -149,8 +149,9 @@ public class SendingEntityBody implements ListenerState {
         IOException connectionClose = new IOException(REMOTE_CLIENT_CLOSED_WHILE_WRITING_OUTBOUND_RESPONSE_BODY);
         outboundResponseMsg.setIoException(connectionClose);
         outboundRespStatusFuture.notifyHttpListener(connectionClose);
-
-        LOG.error(REMOTE_CLIENT_CLOSED_WHILE_WRITING_OUTBOUND_RESPONSE_BODY);
+        if (!outboundResponseMsg.isStreaming()) {
+            LOG.error(REMOTE_CLIENT_CLOSED_WHILE_WRITING_OUTBOUND_RESPONSE_BODY);
+        }
     }
 
     @Override
