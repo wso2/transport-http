@@ -49,6 +49,12 @@ public class SslConfiguration {
     private List<Parameter> parameters = new ArrayList<>();
     private SSLConfig sslConfig = new SSLConfig();
     private static final Logger LOG = LoggerFactory.getLogger(SslConfiguration.class);
+    private String keyStoreFile;
+    private String keyStorePassword;
+    private String certPass;
+    private String trustStoreFile;
+    private String trustStorePass;
+    private String headerList;
 
     public void setKeyStoreFile(String keyStoreFile) {
         sslConfig.setKeyStore(new File(Util.substituteVariables(keyStoreFile)));
@@ -125,7 +131,7 @@ public class SslConfiguration {
         return String.valueOf(sslConfig.getKeyStore());
     }
 
-    public String getKeyStorePass() {
+    public String getKeyStorePassword() {
         return sslConfig.getKeyStorePass();
     }
 
@@ -284,5 +290,29 @@ public class SslConfiguration {
             }
         }
         return sslConfig;
+    }
+
+    public void setCertPass(String certPass) {
+        this.certPass = certPass;
+    }
+
+    public String getCertPass() {
+        return certPass;
+    }
+
+    public String getTrustStoreFile() {
+        return trustStoreFile;
+    }
+
+    public String getTrustStorePass() {
+        return trustStorePass;
+    }
+
+    public String getHeaderList() {
+        return headerList;
+    }
+
+    public void setHeaderList(String headerList) {
+        this.headerList = headerList;
     }
 }
