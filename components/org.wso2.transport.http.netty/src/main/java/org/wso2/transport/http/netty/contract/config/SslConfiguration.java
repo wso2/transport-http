@@ -131,7 +131,7 @@ public class SslConfiguration {
         return String.valueOf(sslConfig.getKeyStore());
     }
 
-    public String getKeyStorePassword() {
+    public String getKeyStorePass() {
         return sslConfig.getKeyStorePass();
     }
 
