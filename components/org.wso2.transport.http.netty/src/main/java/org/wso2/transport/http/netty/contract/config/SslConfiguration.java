@@ -52,9 +52,7 @@ public class SslConfiguration {
     private String keyStoreFile;
     private String keyStorePassword;
     private String certPass;
-    private String trustStoreFile;
-    private String trustStorePass;
-    private String headerList;
+    private String strictTransportSecurityHeader;
 
     public void setKeyStoreFile(String keyStoreFile) {
         sslConfig.setKeyStore(new File(Util.substituteVariables(keyStoreFile)));
@@ -300,19 +298,11 @@ public class SslConfiguration {
         return certPass;
     }
 
-    public String getTrustStoreFile() {
-        return trustStoreFile;
+    public String getStrictTransportSecurityHeader() {
+        return strictTransportSecurityHeader;
     }
 
-    public String getTrustStorePass() {
-        return trustStorePass;
-    }
-
-    public String getHeaderList() {
-        return headerList;
-    }
-
-    public void setHeaderList(String headerList) {
-        this.headerList = headerList;
+    public void setStrictTransportSecurityHeader(String strictTransportSecurityHeader) {
+        this.strictTransportSecurityHeader = strictTransportSecurityHeader;
     }
 }
