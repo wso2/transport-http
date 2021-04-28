@@ -55,6 +55,7 @@ public class ListenerConfiguration extends SslConfiguration {
     private boolean pipeliningEnabled;
     private boolean webSocketCompressionEnabled;
     private long pipeliningLimit;
+    private String responseHeaderList;
 
     public ListenerConfiguration() {
     }
@@ -200,5 +201,13 @@ public class ListenerConfiguration extends SslConfiguration {
 
     public void setWebSocketCompressionEnabled(boolean webSocketCompressionEnabled) {
         this.webSocketCompressionEnabled = webSocketCompressionEnabled;
+    }
+
+    public String getResponseHeaderList() {
+        return responseHeaderList;
+    }
+
+    public void setResponseHeaderList(String responseHeaderList) {
+        this.responseHeaderList = responseHeaderList;
     }
 }
