@@ -196,6 +196,12 @@ public class SslConfiguration {
     }
 
     private SSLConfig getSSLConfigForListener() {
+        if (sslConfig.getKeyStore() == null && keyStoreFile != null) {
+            sslConfig.setKeyStore(new File(Util.substituteVariables(keyStoreFile)));
+        }
+        if (sslConfig.getKeyStorePass() == null && keyStorePassword != null) {
+            sslConfig.setKeyStorePass(keyStorePassword);
+        }
         if ((sslConfig.getKeyStore() == null || sslConfig.getKeyStorePass() == null) && (
                 sslConfig.getServerKeyFile() == null || sslConfig.getServerCertificates() == null)) {
             throw new IllegalArgumentException("keyStoreFile or keyStorePassword not defined for HTTPS scheme");

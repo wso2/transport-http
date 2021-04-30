@@ -196,7 +196,8 @@
     <properties>
         <bundle.activator>org.wso2.transport.http.netty.internal.HttpTransportActivator</bundle.activator>
         <private.package>
-            org.wso2.transport.http.netty.internal
+            org.wso2.transport.http.netty.internal,
+            org.yaml.snakeyaml.*;version="${org.snakeyaml.package.import.version.range}",
         </private.package>
         <export.package>
             !org.wso2.transport.http.netty.internal,
