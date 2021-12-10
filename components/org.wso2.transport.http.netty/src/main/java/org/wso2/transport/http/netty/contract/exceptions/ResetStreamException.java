@@ -18,6 +18,9 @@
 
 package org.wso2.transport.http.netty.contract.exceptions;
 
+/**
+ * Exception for HTTP2 reset stream errors.
+ */
 public class ResetStreamException extends Exception {
 
     private final String message;

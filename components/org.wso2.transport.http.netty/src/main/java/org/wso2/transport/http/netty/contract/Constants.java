@@ -403,7 +403,7 @@ public final class Constants {
     public static final String PROMISED_STREAM_REJECTED_ERROR
             = "Promised stream is already rejected or stream is no longer valid";
 
-    public static final String STREAM_WAS_RESET = "Stream was reset.";
+    public static final String STREAM_WAS_RESET = "Stream was reset";
 
     public static final String MAXIMUM_WAIT_TIME_EXCEED = "Could not obtain a connection within maximum wait time";
 
