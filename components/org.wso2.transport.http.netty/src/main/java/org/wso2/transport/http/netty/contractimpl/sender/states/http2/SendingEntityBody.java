@@ -19,16 +19,21 @@
 package org.wso2.transport.http.netty.contractimpl.sender.states.http2;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.Http2ConnectionEncoder;
+import io.netty.handler.codec.http2.Http2Error;
 import io.netty.handler.codec.http2.Http2Exception;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.exceptions.EndpointTimeOutException;
+import org.wso2.transport.http.netty.contract.exceptions.ResetStreamException;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2ClientChannel;
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2DataEventListener;
@@ -42,6 +47,7 @@ import org.wso2.transport.http.netty.message.Http2PushPromise;
 import java.io.IOException;
 
 import static org.wso2.transport.http.netty.contract.Constants.IDLE_TIMEOUT_TRIGGERED_WHILE_WRITING_OUTBOUND_REQUEST_BODY;
+import static org.wso2.transport.http.netty.contract.Constants.INBOUND_STREAM_WAS_RESET;
 import static org.wso2.transport.http.netty.contract.Constants.REMOTE_SERVER_CLOSED_WHILE_WRITING_OUTBOUND_REQUEST_BODY;
 import static org.wso2.transport.http.netty.contractimpl.common.states.Http2StateUtil.onPushPromiseRead;
 
@@ -91,7 +97,7 @@ public class SendingEntityBody implements SenderState {
         // receive. In order to handle it. we need to change the states depending on the action.
         http2MessageStateContext.setSenderState(new ReceivingHeaders(http2TargetHandler, http2RequestWriter));
         http2MessageStateContext.getSenderState().readInboundResponseHeaders(ctx, http2HeadersFrame, outboundMsgHolder,
-                serverPush, http2MessageStateContext);
+                                                                             serverPush, http2MessageStateContext);
     }
 
     @Override
@@ -102,7 +108,7 @@ public class SendingEntityBody implements SenderState {
         // receive. In order to handle it. we need to change the states depending on the action.
         http2MessageStateContext.setSenderState(new ReceivingEntityBody(http2TargetHandler, http2RequestWriter));
         http2MessageStateContext.getSenderState().readInboundResponseBody(ctx, http2DataFrame, outboundMsgHolder,
-                serverPush, http2MessageStateContext);
+                                                                          serverPush, http2MessageStateContext);
     }
 
     @Override
@@ -113,7 +119,7 @@ public class SendingEntityBody implements SenderState {
 
     @Override
     public void handleStreamTimeout(OutboundMsgHolder outboundMsgHolder, boolean serverPush,
-            ChannelHandlerContext ctx, int streamId) {
+                                    ChannelHandlerContext ctx, int streamId) {
         if (!serverPush) {
             outboundMsgHolder.getResponseFuture().notifyHttpListener(new EndpointTimeOutException(
                     IDLE_TIMEOUT_TRIGGERED_WHILE_WRITING_OUTBOUND_REQUEST_BODY,

@@ -225,7 +225,9 @@ public class Http2ClientTimeoutHandler implements Http2DataEventListener {
         }
 
         private void handleIncompleteResponse(OutboundMsgHolder msgHolder, boolean primary) {
+            System.out.println("Heloooooooooooooooo-------------------handleIncompleteResponse--------------");
             LastHttpContent lastHttpContent = new DefaultLastHttpContent();
+
             lastHttpContent.setDecoderResult(DecoderResult.failure(new DecoderException(getErrorMessage(primary))));
             msgHolder.getResponse().addHttpContent(lastHttpContent);
             LOG.warn(getErrorMessage(primary));

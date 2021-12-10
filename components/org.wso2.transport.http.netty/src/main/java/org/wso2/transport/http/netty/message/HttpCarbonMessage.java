@@ -32,6 +32,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http2.Http2Error;
 import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.HttpResponseFuture;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
@@ -58,7 +59,7 @@ public class HttpCarbonMessage {
 
     private MessageFuture messageFuture;
     private final ServerConnectorFuture httpOutboundRespFuture = new HttpWsServerConnectorFuture();
-    private final DefaultHttpResponseFuture httpOutboundRespStatusFuture = new DefaultHttpResponseFuture();
+    private DefaultHttpResponseFuture httpOutboundRespStatusFuture = new DefaultHttpResponseFuture();
     private final Observable contentObservable = new DefaultObservable();
     private HttpHeaders httpTrailerHeaders = new DefaultLastHttpContent().trailingHeaders();
     private IOException ioException;
@@ -387,6 +388,20 @@ public class HttpCarbonMessage {
     public HttpResponseFuture pushPromise(Http2PushPromise pushPromise)
             throws ServerConnectorException {
         httpOutboundRespFuture.notifyHttpListener(pushPromise);
+        return httpOutboundRespStatusFuture;
+    }
+
+    /**
+     * Sends the RST_FRAME with the relevant error code back to the client.
+     *
+     * @return HttpResponseFuture which gives the status of the operation
+     * @throws ServerConnectorException if there is an error occurs while doing the operation
+     */
+    public HttpResponseFuture resetStream(Http2Error http2Error)
+            throws ServerConnectorException {
+        System.out.println("Transport----resetStream-----");
+        httpOutboundRespStatusFuture = new DefaultHttpResponseFuture();
+        httpOutboundRespFuture.notifyHttpListener(http2Error);
         return httpOutboundRespStatusFuture;
     }
 

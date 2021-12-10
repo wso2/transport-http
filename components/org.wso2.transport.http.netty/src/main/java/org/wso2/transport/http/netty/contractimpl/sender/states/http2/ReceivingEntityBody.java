@@ -86,6 +86,7 @@ public class ReceivingEntityBody implements SenderState {
                                            OutboundMsgHolder outboundMsgHolder, boolean serverPush,
                                            Http2MessageStateContext http2MessageStateContext) throws Http2Exception {
         // When trailer headers are going to be received after receiving entity body of the response.
+        System.out.println("Transport----ReceivingEntityBody------readInboundResponseHeaders--");
         http2MessageStateContext.setSenderState(new ReceivingHeaders(http2TargetHandler, http2RequestWriter));
         http2MessageStateContext.getSenderState().readInboundResponseHeaders(ctx, http2HeadersFrame, outboundMsgHolder,
                 serverPush, http2MessageStateContext);
@@ -95,6 +96,7 @@ public class ReceivingEntityBody implements SenderState {
     public void readInboundResponseBody(ChannelHandlerContext ctx, Http2DataFrame http2DataFrame,
                                         OutboundMsgHolder outboundMsgHolder, boolean serverPush,
                                         Http2MessageStateContext http2MessageStateContext) {
+        System.out.println("Transport----ReceivingEntityBody------readInboundResponseBody--");
         onDataRead(http2DataFrame, outboundMsgHolder, serverPush, http2MessageStateContext);
     }
 
@@ -109,6 +111,7 @@ public class ReceivingEntityBody implements SenderState {
             ChannelHandlerContext ctx, int streamId) {
         //This is handled by {@link Http2ClientTimeoutHandler#handleIncompleteResponse(OutboundMsgHolder, boolean)}
         // method.
+        System.out.println("Transport----ReceivingEntityBody------handleStreamTimeout--");
     }
 
     @Override

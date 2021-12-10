@@ -104,6 +104,11 @@ public class HttpOutboundRespListener implements HttpConnectorListener {
                 "Sending Server Push messages is not supported for HTTP/1.x connections"));
     }
 
+//    @Override
+//    public void onReset(HttpCarbonMessage httpMessage, int promiseId) {
+//        LOG.error("Illegal method invocation");
+//    }
+
     // Decides whether to close the connection after sending the response
     public boolean isKeepAlive() {
         return isKeepAliveConnection(keepAliveConfig, requestDataHolder.getConnectionHeaderValue(),

@@ -21,9 +21,12 @@ package org.wso2.transport.http.netty.contractimpl.sender.http2;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.Http2Connection;
 import io.netty.handler.codec.http2.Http2ConnectionEncoder;
 import io.netty.handler.codec.http2.Http2Error;
@@ -32,6 +35,7 @@ import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2NoMoreStreamIdsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.RequestCompleted;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.SendingEntityBody;
@@ -41,6 +45,7 @@ import org.wso2.transport.http.netty.message.Http2HeadersFrame;
 import org.wso2.transport.http.netty.message.Http2PushPromise;
 import org.wso2.transport.http.netty.message.Http2Reset;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transport.http.netty.message.HttpCarbonResponse;
 
 import java.util.Locale;
 
@@ -194,6 +199,7 @@ public class Http2TargetHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        System.out.println("Transport----Http2TargetHandler------channelRead-");
         if (msg instanceof Http2HeadersFrame) {
             onHeaderRead(ctx, (Http2HeadersFrame) msg);
         } else if (msg instanceof Http2DataFrame) {
@@ -201,6 +207,7 @@ public class Http2TargetHandler extends ChannelDuplexHandler {
         } else if (msg instanceof Http2PushPromise) {
             onPushPromiseRead(ctx, (Http2PushPromise) msg);
         } else if (msg instanceof Http2Reset) {
+            System.out.println("Transport----Http2TargetHandler------msg instanceof Http2Reset--");
             onResetRead((Http2Reset) msg);
         }
     }
@@ -262,11 +269,24 @@ public class Http2TargetHandler extends ChannelDuplexHandler {
     }
 
     private void onResetRead(Http2Reset http2Reset) {
+        System.out.println("Transport----Http2TargetHandler------onResetRead-");
         int streamId = http2Reset.getStreamId();
         OutboundMsgHolder outboundMsgHolder = http2ClientChannel.getInFlightMessage(streamId);
         if (outboundMsgHolder != null) {
+            System.out.println("Transport----Http2TargetHandler------outboundMsgHolder != null-");
             outboundMsgHolder.getResponseFuture()
                     .notifyHttpListener(new Exception("HTTP/2 stream " + streamId + " reset by the remote peer"));
+//            HttpCarbonResponse inboundResponse = outboundMsgHolder.getResponse();
+            if (outboundMsgHolder.getResponse() != null) {
+                System.out.println("Transport----Http2TargetHandle---outboundMsgHolder.getResponse() != null----");
+                LastHttpContent lastHttpContent = new DefaultLastHttpContent();
+
+                lastHttpContent.setDecoderResult(DecoderResult.failure(
+                        new DecoderException("HTTP/2 stream " + streamId + " reset by the remote peer")));
+                outboundMsgHolder.getResponse().addHttpContent(lastHttpContent);
+                outboundMsgHolder.getResponse().setProperty(Constants.HTTP2_ERROR, http2Reset.getError());
+                LOG.warn("HTTP/2 stream " + streamId + " reset by the remote peer");
+            }
         }
     }
 

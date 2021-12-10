@@ -52,6 +52,7 @@ public class EntityBodyReceived implements SenderState {
 
     EntityBodyReceived(Http2TargetHandler http2TargetHandler,
                        Http2TargetHandler.Http2RequestWriter http2RequestWriter) {
+        System.out.println("Transport----EntityBodyReceived------init--");
         this.http2TargetHandler = http2TargetHandler;
         if (http2RequestWriter != null) {
             this.http2RequestWriter = http2RequestWriter;
@@ -88,6 +89,8 @@ public class EntityBodyReceived implements SenderState {
                                            Http2MessageStateContext http2MessageStateContext) throws Http2Exception {
         // When promised response message is going to be received after the original response or previous promised
         // responses has been received.
+        System.out.println("Transport----EntityBodyReceived------readInboundResponseHeaders--");
+
         http2MessageStateContext.setSenderState(new ReceivingHeaders(http2TargetHandler, http2RequestWriter));
         http2MessageStateContext.getSenderState().readInboundResponseHeaders(ctx, http2HeadersFrame, outboundMsgHolder,
                 serverPush, http2MessageStateContext);
@@ -97,6 +100,8 @@ public class EntityBodyReceived implements SenderState {
     public void readInboundResponseBody(ChannelHandlerContext ctx, Http2DataFrame http2DataFrame,
                                         OutboundMsgHolder outboundMsgHolder, boolean serverPush,
                                         Http2MessageStateContext http2MessageStateContext) {
+        System.out.println("Transport----EntityBodyReceived------readInboundResponseBody--");
+
         LOG.warn("readInboundResponseBody is not a dependant action of this state");
     }
 
@@ -114,6 +119,7 @@ public class EntityBodyReceived implements SenderState {
 
     @Override
     public void handleConnectionClose(OutboundMsgHolder outboundMsgHolder) {
+        System.out.println("Transport----EntityBodyReceived------handleConnectionClose--");
         if (LOG.isDebugEnabled()) {
             LOG.debug("Channel is closed");
         }

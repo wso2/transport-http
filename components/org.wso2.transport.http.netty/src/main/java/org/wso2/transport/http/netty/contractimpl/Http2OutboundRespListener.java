@@ -19,6 +19,7 @@
 
 package org.wso2.transport.http.netty.contractimpl;
 
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.contract.HttpResponseFuture;
 import org.wso2.transport.http.netty.contract.exceptions.ServerConnectorException;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
 import org.wso2.transport.http.netty.contractimpl.listener.HttpServerChannelInitializer;
 import org.wso2.transport.http.netty.contractimpl.listener.http2.Http2ServerChannel;
@@ -126,6 +128,28 @@ public class Http2OutboundRespListener implements HttpConnectorListener {
             //TODO:Call dataEventListener.onStreamInit with the promiseId
             writeMessage(outboundResponseMsg, promiseId, false);
         } else {
+            inboundRequestMsg.getHttpOutboundRespStatusFuture()
+                    .notifyHttpListener(new ServerConnectorException(PROMISED_STREAM_REJECTED_ERROR));
+        }
+    }
+
+    @Override
+    public void onReset(Http2Error errorCode) {
+        if (isValidStreamId(originalStreamId, conn)) {
+            System.out.println("Transport----onReset---is ValidStreamId(originalStreamId, conn)--");
+            ChannelFuture channelFuture = encoder.writeRstStream(ctx, originalStreamId, errorCode.code(),
+                                                                 ctx.newPromise());
+            try {
+                encoder.flowController().writePendingBytes();
+            } catch (Http2Exception e) {
+                e.printStackTrace();
+            }
+            http2ServerChannel.getDataEventListeners()
+                    .forEach(dataEventListener -> dataEventListener.onStreamReset(originalStreamId));
+            ctx.flush();
+            Util.checkForResponseWriteStatus(inboundRequestMsg, outboundRespStatusFuture, channelFuture);
+        } else {
+            System.out.println("Transport----onReset---is NOT ValidStreamId(originalStreamId, conn)--");
             inboundRequestMsg.getHttpOutboundRespStatusFuture()
                     .notifyHttpListener(new ServerConnectorException(PROMISED_STREAM_REJECTED_ERROR));
         }

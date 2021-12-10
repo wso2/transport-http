@@ -140,9 +140,11 @@ public class BlockingEntityCollector implements EntityCollector {
             readWriteLock.lock();
             List<HttpContent> contentList = new ArrayList<>();
             while (state == EntityBodyState.CONSUMABLE || state == EntityBodyState.EXPECTING) {
+                System.out.println("Transport----countMessageLengthTill-waitForEntity-");
                 waitForEntity();
                 HttpContent httpContent = httpContentQueue.poll(soTimeOut, MILLISECONDS);
                 if (httpContent == null) {
+                    System.out.println("Transport----countMessageLengthTill--httpContent == null--");
                     throw new IllegalStateException("poll timeout expired");
                 }
                 size += httpContent.content().readableBytes();

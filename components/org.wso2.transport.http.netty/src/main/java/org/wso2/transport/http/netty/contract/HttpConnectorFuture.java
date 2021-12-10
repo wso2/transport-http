@@ -18,6 +18,7 @@
 
 package org.wso2.transport.http.netty.contract;
 
+import io.netty.handler.codec.http2.Http2Error;
 import org.wso2.transport.http.netty.contract.exceptions.ServerConnectorException;
 import org.wso2.transport.http.netty.message.Http2PushPromise;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
@@ -41,6 +42,13 @@ public interface HttpConnectorFuture {
      * @throws ServerConnectorException if any error occurred during the notification.
      */
     void notifyHttpListener(HttpCarbonMessage httpMessage) throws ServerConnectorException;
+
+    /**
+     * Notify HTTP messages to the listener.
+     *
+     * @throws ServerConnectorException if any error occurred during the notification.
+     */
+    void notifyHttpListener(Http2Error http2Error) throws ServerConnectorException;
 
     /**
      * Notifies HTTP Server Push messages to the listener.

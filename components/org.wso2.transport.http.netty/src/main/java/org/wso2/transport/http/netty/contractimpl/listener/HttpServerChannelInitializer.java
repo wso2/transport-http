@@ -107,6 +107,8 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     private long pipeliningLimit;
     private EventExecutorGroup pipeliningGroup;
     private boolean webSocketCompressionEnabled;
+//    private boolean disableSendingEOS = false; //default
+    private boolean disableSendingEOS = true;
 
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
@@ -389,6 +391,28 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
 
     public void setWebSocketCompressionEnabled(boolean webSocketCompressionEnabled) {
         this.webSocketCompressionEnabled = webSocketCompressionEnabled;
+    }
+
+    /**
+     * Sets whether endOfStream flag is true on incomplete streams. When the flag is set to false, incomplete inbound
+     * content is not completed with lastHttpContent and provide application level error to decide on sending RST_STREAM
+     * explicitly.
+     *
+     * @param disableSendingEOS whether EOS is disabled
+     */
+    public void setDisableSendingEOS(boolean disableSendingEOS) {
+        this.disableSendingEOS = disableSendingEOS;
+    }
+
+    /**
+     * Gets endOfStream flag status to set on incomplete streams. When the flag is false, incomplete inbound content is
+     * not completed with lastHttpContent and provide application level error to decide on sending RST_STREAM
+     * explicitly.
+     *
+     * @return whether EOS is disabled
+     */
+    public boolean isDisableSendingEOS() {
+        return disableSendingEOS;
     }
 
     /**

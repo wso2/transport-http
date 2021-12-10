@@ -22,12 +22,15 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.DefaultHttp2Headers;
 import io.netty.handler.codec.http2.Http2CodecUtil;
 import io.netty.handler.codec.http2.Http2Connection;
@@ -440,14 +443,26 @@ public class Http2StateUtil {
             }
             if (handleIncompleteRequest) {
                 if (whileReceivingHeader) {
-                    handleIncompleteInboundMessage(inboundRequestMsg,
+                    handleIncompleteInboundMessageOnTimeout(inboundRequestMsg,
                                                    IDLE_TIMEOUT_TRIGGERED_WHILE_READING_INBOUND_REQUEST_HEADERS);
                 } else {
-                    handleIncompleteInboundMessage(inboundRequestMsg,
+                    handleIncompleteInboundMessageOnTimeout(inboundRequestMsg,
                                                    IDLE_TIMEOUT_TRIGGERED_WHILE_READING_INBOUND_REQUEST_BODY);
                 }
             }
         });
+    }
+
+    public static void handleIncompleteInboundMessageOnTimeout(HttpCarbonMessage inboundRequestMsg,
+                                                              String errorMessage) {
+        LastHttpContent lastHttpContent = new DefaultLastHttpContent();
+        DecoderException exception = new DecoderException(errorMessage);
+        lastHttpContent.setDecoderResult(DecoderResult.failure(exception));
+        if (inboundRequestMsg != null) {
+            inboundRequestMsg.addHttpContent(lastHttpContent);
+            inboundRequestMsg.notifyContentFailure(exception);
+        }
+        LOG.warn(errorMessage);
     }
 
     public static void initHttp2MessageContext(HttpCarbonMessage outboundRequest,

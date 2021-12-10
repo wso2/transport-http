@@ -19,6 +19,7 @@
 
 package org.wso2.transport.http.netty.contract;
 
+import io.netty.handler.codec.http2.Http2Error;
 import org.wso2.transport.http.netty.message.Http2PushPromise;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 
@@ -54,5 +55,13 @@ public interface HttpConnectorListener {
      * @param  httpMessage the push response message
      */
     default void onPushResponse(int promiseId, HttpCarbonMessage httpMessage) {
+    }
+
+    /**
+     * Gets notified for events on Reset.
+     *
+     * @param errorCode   the promise id of the push response
+     */
+    default void onReset(Http2Error errorCode) {
     }
 }

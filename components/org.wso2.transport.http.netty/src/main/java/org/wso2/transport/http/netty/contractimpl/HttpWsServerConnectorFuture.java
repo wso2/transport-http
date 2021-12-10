@@ -21,6 +21,7 @@ package org.wso2.transport.http.netty.contractimpl;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.handler.codec.http2.Http2Error;
 import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.contract.PortBindingEventListener;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
@@ -87,6 +88,15 @@ public class HttpWsServerConnectorFuture extends DefaultWebSocketConnectorFuture
             throw new ServerConnectorException(HTTP_CONNECTOR_LISTENER_IS_NOT_SET);
         }
         httpConnectorListener.onPushPromise(pushPromise);
+    }
+
+    @Override
+    public void notifyHttpListener(Http2Error errorCode) throws ServerConnectorException {
+        if (httpConnectorListener == null) {
+            throw new ServerConnectorException(HTTP_CONNECTOR_LISTENER_IS_NOT_SET);
+        }
+        System.out.println("Transport----HttpWsServerConnectorFuture---notifyHttpListener--");
+        httpConnectorListener.onReset(errorCode);
     }
 
     @Override

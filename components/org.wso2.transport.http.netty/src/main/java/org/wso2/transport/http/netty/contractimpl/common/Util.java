@@ -704,8 +704,10 @@ public class Util {
                 if (throwable instanceof ClosedChannelException) {
                     throwable = new IOException(REMOTE_CLIENT_CLOSED_WHILE_WRITING_OUTBOUND_RESPONSE_HEADERS);
                 }
+        System.out.println("Heloooooooooooooooo----checkForResponseWriteStatus----throwable != null-");
                 outboundRespStatusFuture.notifyHttpListener(throwable);
             } else {
+        System.out.println("Heloooooooooooooooo----checkForResponseWriteStatus----throwable == null-");
                 outboundRespStatusFuture.notifyHttpListener(inboundRequestMsg);
             }
         });
