@@ -21,9 +21,12 @@ package org.wso2.transport.http.netty.contractimpl.sender.http2;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.Http2Connection;
 import io.netty.handler.codec.http2.Http2ConnectionEncoder;
 import io.netty.handler.codec.http2.Http2Error;
@@ -32,7 +35,10 @@ import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2NoMoreStreamIdsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contract.Constants;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
+import org.wso2.transport.http.netty.contractimpl.listener.http2.Http2SourceHandler;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.RequestCompleted;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.SendingEntityBody;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.SendingHeaders;
@@ -41,6 +47,7 @@ import org.wso2.transport.http.netty.message.Http2HeadersFrame;
 import org.wso2.transport.http.netty.message.Http2PushPromise;
 import org.wso2.transport.http.netty.message.Http2Reset;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transport.http.netty.message.HttpCarbonResponse;
 
 import java.util.Locale;
 
@@ -267,6 +274,9 @@ public class Http2TargetHandler extends ChannelDuplexHandler {
         if (outboundMsgHolder != null) {
             outboundMsgHolder.getResponseFuture()
                     .notifyHttpListener(new Exception("HTTP/2 stream " + streamId + " reset by the remote peer"));
+            HttpCarbonResponse inboundResponse = outboundMsgHolder.getResponse();
+            Util.handleIncompleteMsgOnReset(http2Reset, streamId, inboundResponse);
+            LOG.warn("HTTP/2 stream " + streamId + " reset by the remote peer");
         }
     }
 
