@@ -22,7 +22,7 @@ jobs:
                     packageUser: ${{ github.actor }}
                     packagePAT: ${{ secrets.GITHUB_TOKEN }}
                 run: |
-                    mvn -B package --file components/org.wso2.transport.http.netty/pom.xml
+                    mvn -B package --file pom.xml
                     mkdir staging && cp target/*.jar staging
 
             -   name: Step 4 - Set up a cache for Maven
