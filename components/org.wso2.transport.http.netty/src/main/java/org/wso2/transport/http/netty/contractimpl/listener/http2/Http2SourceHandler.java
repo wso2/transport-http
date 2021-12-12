@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
 import org.wso2.transport.http.netty.contractimpl.listener.HttpServerChannelInitializer;
 import org.wso2.transport.http.netty.contractimpl.listener.states.http2.EntityBodyReceived;
@@ -42,6 +43,7 @@ import org.wso2.transport.http.netty.contractimpl.listener.states.http2.Receivin
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2DataEventListener;
 import org.wso2.transport.http.netty.message.Http2DataFrame;
 import org.wso2.transport.http.netty.message.Http2HeadersFrame;
+import org.wso2.transport.http.netty.message.Http2Reset;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.HttpCarbonRequest;
 import org.wso2.transport.http.netty.message.ServerRemoteFlowControlListener;
@@ -163,8 +165,7 @@ public final class Http2SourceHandler extends ChannelInboundHandlerAdapter {
         } else if (msg instanceof Http2DataFrame) {
             Http2DataFrame dataFrame = (Http2DataFrame) msg;
             int streamId = dataFrame.getStreamId();
-            HttpCarbonMessage sourceReqCMsg = http2ServerChannel.getInboundMessage(streamId)
-                    .getInboundMsg();
+            HttpCarbonMessage sourceReqCMsg = http2ServerChannel.getInboundMessage(streamId).getInboundMsg();
             // CarbonMessage can be already removed from the map once the LastHttpContent is added because of receiving
             // a data frame when the outbound response is started to send. So, the data frames received after that
             // should be released.
@@ -173,6 +174,8 @@ public final class Http2SourceHandler extends ChannelInboundHandlerAdapter {
             } else {
                 sourceReqCMsg.getHttp2MessageStateContext().getListenerState().readInboundRequestBody(this, dataFrame);
             }
+        } else if (msg instanceof Http2Reset) {
+            onResetRead((Http2Reset) msg);
         } else {
             ctx.fireChannelRead(msg);
         }
@@ -222,6 +225,16 @@ public final class Http2SourceHandler extends ChannelInboundHandlerAdapter {
 
     public Map<Integer, InboundMessageHolder> getStreamIdRequestMap() {
         return http2ServerChannel.getStreamIdRequestMap();
+    }
+
+    private void onResetRead(Http2Reset http2Reset) {
+        int streamId = http2Reset.getStreamId();
+        InboundMessageHolder inboundMessageHolder = http2ServerChannel.getInboundMessage(streamId);
+        if (inboundMessageHolder != null) {
+            HttpCarbonMessage inboundRequest = inboundMessageHolder.getInboundMsg();
+            Util.handleIncompleteMsgOnReset(http2Reset, streamId, inboundRequest);
+            LOG.warn("HTTP/2 stream " + streamId + " reset by the remote peer");
+        }
     }
 
     public ChannelHandlerContext getChannelHandlerContext() {

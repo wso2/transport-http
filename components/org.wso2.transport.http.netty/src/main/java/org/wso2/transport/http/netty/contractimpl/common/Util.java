@@ -24,10 +24,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.base64.Base64;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMessage;
@@ -74,6 +77,7 @@ import org.wso2.transport.http.netty.message.DefaultBackPressureListener;
 import org.wso2.transport.http.netty.message.DefaultListener;
 import org.wso2.transport.http.netty.message.Http2InboundContentListener;
 import org.wso2.transport.http.netty.message.Http2PassthroughBackPressureListener;
+import org.wso2.transport.http.netty.message.Http2Reset;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.HttpCarbonRequest;
 import org.wso2.transport.http.netty.message.HttpCarbonResponse;
@@ -1096,6 +1100,16 @@ public class Util {
             }
         } else {
             ctx.channel().attr(Constants.MUTUAL_SSL_RESULT_ATTRIBUTE).set(MUTUAL_SSL_DISABLED);
+        }
+    }
+
+    public static void handleIncompleteMsgOnReset(Http2Reset http2Reset, int streamId, HttpCarbonMessage message) {
+        if (message != null) {
+            LastHttpContent lastHttpContent = new DefaultLastHttpContent();
+            lastHttpContent.setDecoderResult(DecoderResult.failure(
+                    new DecoderException("HTTP/2 stream " + streamId + " reset by the remote peer")));
+            message.addHttpContent(lastHttpContent);
+            message.setProperty(Constants.HTTP2_ERROR, http2Reset.getError());
         }
     }
 }

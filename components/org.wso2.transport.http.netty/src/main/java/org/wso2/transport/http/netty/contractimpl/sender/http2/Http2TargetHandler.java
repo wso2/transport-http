@@ -32,6 +32,7 @@ import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2NoMoreStreamIdsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.RequestCompleted;
 import org.wso2.transport.http.netty.contractimpl.sender.states.http2.SendingEntityBody;
@@ -41,6 +42,7 @@ import org.wso2.transport.http.netty.message.Http2HeadersFrame;
 import org.wso2.transport.http.netty.message.Http2PushPromise;
 import org.wso2.transport.http.netty.message.Http2Reset;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transport.http.netty.message.HttpCarbonResponse;
 
 import java.util.Locale;
 
@@ -267,6 +269,9 @@ public class Http2TargetHandler extends ChannelDuplexHandler {
         if (outboundMsgHolder != null) {
             outboundMsgHolder.getResponseFuture()
                     .notifyHttpListener(new Exception("HTTP/2 stream " + streamId + " reset by the remote peer"));
+            HttpCarbonResponse inboundResponse = outboundMsgHolder.getResponse();
+            Util.handleIncompleteMsgOnReset(http2Reset, streamId, inboundResponse);
+            LOG.warn("HTTP/2 stream " + streamId + " reset by the remote peer");
         }
     }
 

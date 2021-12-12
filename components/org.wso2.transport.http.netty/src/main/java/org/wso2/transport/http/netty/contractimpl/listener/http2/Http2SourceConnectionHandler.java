@@ -22,6 +22,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http2.Http2ConnectionDecoder;
 import io.netty.handler.codec.http2.Http2ConnectionEncoder;
 import io.netty.handler.codec.http2.Http2ConnectionHandler;
+import io.netty.handler.codec.http2.Http2Error;
 import io.netty.handler.codec.http2.Http2EventAdapter;
 import io.netty.handler.codec.http2.Http2FrameListener;
 import io.netty.handler.codec.http2.Http2Headers;
@@ -36,6 +37,7 @@ import org.wso2.transport.http.netty.contractimpl.listener.HttpServerChannelInit
 import org.wso2.transport.http.netty.internal.HttpTransportContextHolder;
 import org.wso2.transport.http.netty.message.Http2DataFrame;
 import org.wso2.transport.http.netty.message.Http2HeadersFrame;
+import org.wso2.transport.http.netty.message.Http2Reset;
 
 import static org.wso2.transport.http.netty.contract.Constants.ZERO_READABLE_BYTES;
 import static org.wso2.transport.http.netty.contractimpl.common.Util.safelyRemoveHandlers;
@@ -152,6 +154,8 @@ public class Http2SourceConnectionHandler extends Http2ConnectionHandler {
                 LOG.debug("RstStreamRead event in server frame listener. Stream id : {} Error code : {}", streamId,
                           errorCode);
             }
+            Http2Reset http2Reset = new Http2Reset(streamId, Http2Error.valueOf(errorCode));
+            ctx.fireChannelRead(http2Reset);
         }
     }
 }
