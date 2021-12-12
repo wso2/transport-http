@@ -2,7 +2,7 @@ name: Transport HTTP Maven Build
 
 on:
     push:
-        branches: [ git-workflow ]
+        branches: [ master ]
 jobs:
 
     build-on-ubuntu:
