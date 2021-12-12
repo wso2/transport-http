@@ -2,7 +2,7 @@ name: Transport HTTP Maven Build
 
 on:
     push:
-        branches: [ master ]
+        branches: [ git-workflow ]
 jobs:
 
     build-on-ubuntu:
@@ -18,6 +18,9 @@ jobs:
                     java-version: 1.8
 
             -   name: Step 3 - Have GitHub Actions Build Maven Project
+                env:
+                    packageUser: ${{ github.actor }}
+                    packagePAT: ${{ secrets.GITHUB_TOKEN }}
                 run: |
                     mvn -B package --file pom.xml
                     mkdir staging && cp target/*.jar staging
