@@ -23,6 +23,7 @@ import org.wso2.transport.http.netty.contract.HttpClientConnectorListener;
 import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.contract.HttpResponseFuture;
 import org.wso2.transport.http.netty.contractimpl.sender.http2.OutboundMsgHolder;
+import org.wso2.transport.http.netty.message.BackPressureObservable;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.ResponseHandle;
 
@@ -118,6 +119,12 @@ public class DefaultHttpResponseFuture implements HttpResponseFuture {
     public void notifyHttpListener(Throwable throwable) {
         responseLock.lock();
         try {
+            if (outboundMsgHolder != null) {
+                BackPressureObservable backPressureObservable = outboundMsgHolder.getBackPressureObservable();
+                if (backPressureObservable != null) {
+                    backPressureObservable.removeListener();
+                }
+            }
             this.throwable = throwable;
             returnError = throwable;
             if (executionWaitSem != null) {
