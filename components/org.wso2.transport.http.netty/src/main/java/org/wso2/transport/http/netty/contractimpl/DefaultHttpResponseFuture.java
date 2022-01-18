@@ -43,6 +43,7 @@ public class DefaultHttpResponseFuture implements HttpResponseFuture {
     private HttpConnectorListener pushPromiseListener;
     private ConcurrentHashMap<Integer, HttpConnectorListener> pushResponseListeners;
     private ConcurrentHashMap<Integer, Throwable> pushResponseListenerErrors;
+    private BackPressureObservable backPressureObservable;
 
     private HttpCarbonMessage httpCarbonMessage;
     private ResponseHandle responseHandle;
@@ -170,6 +171,10 @@ public class DefaultHttpResponseFuture implements HttpResponseFuture {
 
     public void resetStatus() {
         this.returnError = null;
+    }
+
+    public void setBackPressureObservable(BackPressureObservable backPressureObservable) {
+        this.backPressureObservable = backPressureObservable;
     }
 
     @Override
