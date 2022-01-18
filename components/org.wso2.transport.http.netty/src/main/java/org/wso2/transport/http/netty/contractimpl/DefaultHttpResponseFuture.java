@@ -22,6 +22,7 @@ package org.wso2.transport.http.netty.contractimpl;
 import org.wso2.transport.http.netty.contract.HttpClientConnectorListener;
 import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.contract.HttpResponseFuture;
+import org.wso2.transport.http.netty.contractimpl.common.BackPressureHandler;
 import org.wso2.transport.http.netty.contractimpl.sender.http2.OutboundMsgHolder;
 import org.wso2.transport.http.netty.message.BackPressureObservable;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
@@ -43,7 +44,7 @@ public class DefaultHttpResponseFuture implements HttpResponseFuture {
     private HttpConnectorListener pushPromiseListener;
     private ConcurrentHashMap<Integer, HttpConnectorListener> pushResponseListeners;
     private ConcurrentHashMap<Integer, Throwable> pushResponseListenerErrors;
-    private BackPressureObservable backPressureObservable;
+    private BackPressureHandler backPressureHandler;
 
     private HttpCarbonMessage httpCarbonMessage;
     private ResponseHandle responseHandle;
@@ -120,11 +121,10 @@ public class DefaultHttpResponseFuture implements HttpResponseFuture {
     public void notifyHttpListener(Throwable throwable) {
         responseLock.lock();
         try {
-            if (outboundMsgHolder != null) {
-                BackPressureObservable backPressureObservable = outboundMsgHolder.getBackPressureObservable();
-                if (backPressureObservable != null) {
-                    backPressureObservable.removeListener();
-                }
+            if (backPressureHandler != null) {
+                backPressureHandler.getBackPressureObservable().removeListener();
+            } else if (outboundMsgHolder != null) {
+                outboundMsgHolder.getBackPressureObservable().removeListener();
             }
             this.throwable = throwable;
             returnError = throwable;
@@ -173,8 +173,8 @@ public class DefaultHttpResponseFuture implements HttpResponseFuture {
         this.returnError = null;
     }
 
-    public void setBackPressureObservable(BackPressureObservable backPressureObservable) {
-        this.backPressureObservable = backPressureObservable;
+    public void setBackPressureHandler(BackPressureHandler backPressureHandler) {
+        this.backPressureHandler = backPressureHandler;
     }
 
     @Override

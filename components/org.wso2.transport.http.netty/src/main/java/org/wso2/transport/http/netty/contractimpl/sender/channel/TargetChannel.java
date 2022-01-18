@@ -32,7 +32,6 @@ import org.wso2.transport.http.netty.contractimpl.sender.channel.pool.Connection
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2ClientChannel;
 import org.wso2.transport.http.netty.internal.HandlerExecutor;
 import org.wso2.transport.http.netty.internal.HttpTransportContextHolder;
-import org.wso2.transport.http.netty.message.BackPressureObservable;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 
 import java.util.Locale;
@@ -83,8 +82,8 @@ public class TargetChannel {
         targetHandler.setTargetChannel(this);
     }
 
-    public BackPressureObservable getBackPressureObservable() {
-        return Util.getBackPressureHandler(targetHandler.getContext()).getBackPressureObservable();
+    public BackPressureHandler getBackPressureHandler() {
+        return Util.getBackPressureHandler(targetHandler.getContext());
     }
 
     public void writeContent(HttpCarbonMessage httpOutboundRequest) {
