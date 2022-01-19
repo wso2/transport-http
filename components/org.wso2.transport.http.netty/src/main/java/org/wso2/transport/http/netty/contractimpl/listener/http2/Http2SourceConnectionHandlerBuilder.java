@@ -18,6 +18,7 @@
 package org.wso2.transport.http.netty.contractimpl.listener.http2;
 
 
+import io.netty.handler.codec.compression.StandardCompressionOptions;
 import io.netty.handler.codec.http2.AbstractHttp2ConnectionHandlerBuilder;
 import io.netty.handler.codec.http2.CompressorHttp2ConnectionEncoder;
 import io.netty.handler.codec.http2.DefaultHttp2Connection;
@@ -70,7 +71,8 @@ public final class Http2SourceConnectionHandlerBuilder
     @Override
     public Http2SourceConnectionHandler build(Http2ConnectionDecoder decoder, Http2ConnectionEncoder encoder,
                                               Http2Settings initialSettings) {
-        Http2ConnectionEncoder compressEncoder = new CompressorHttp2ConnectionEncoder(encoder);
+        Http2ConnectionEncoder compressEncoder = new CompressorHttp2ConnectionEncoder(
+                encoder, StandardCompressionOptions.gzip(), StandardCompressionOptions.deflate());
         Http2SourceConnectionHandler sourceConnectionHandler = new Http2SourceConnectionHandler(
                 serverChannelInitializer, decoder, compressEncoder, initialSettings, interfaceId,
                 serverConnectorFuture, serverName);
