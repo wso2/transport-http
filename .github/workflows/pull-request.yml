@@ -3,6 +3,7 @@ name: Transport HTTP Maven Build
 on:
     push:
         branches: [ master ]
+    pull_request:
 jobs:
 
     build-on-ubuntu:
