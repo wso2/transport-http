@@ -24,11 +24,14 @@ import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.Http2ConnectionEncoder;
+import io.netty.handler.codec.http2.Http2Error;
 import io.netty.handler.codec.http2.Http2Exception;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.exceptions.EndpointTimeOutException;
+import org.wso2.transport.http.netty.contract.exceptions.ResetStreamException;
 import org.wso2.transport.http.netty.contractimpl.common.states.Http2MessageStateContext;
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2ClientChannel;
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2DataEventListener;
@@ -43,6 +46,7 @@ import java.io.IOException;
 
 import static org.wso2.transport.http.netty.contract.Constants.IDLE_TIMEOUT_TRIGGERED_WHILE_WRITING_OUTBOUND_REQUEST_BODY;
 import static org.wso2.transport.http.netty.contract.Constants.REMOTE_SERVER_CLOSED_WHILE_WRITING_OUTBOUND_REQUEST_BODY;
+import static org.wso2.transport.http.netty.contract.Constants.STREAM_WAS_RESET;
 import static org.wso2.transport.http.netty.contractimpl.common.states.Http2StateUtil.onPushPromiseRead;
 
 /**
@@ -131,6 +135,22 @@ public class SendingEntityBody implements SenderState {
     }
 
     private void writeContent(ChannelHandlerContext ctx, HttpContent msg) throws Http2Exception {
+        // The decoder exception is set to complete an incomplete state of a content. Following check is to send
+        // RST_STREAM on such event.
+        if (msg.decoderResult().isFailure()) {
+            msg.release();
+            Object http2Error = outboundMsgHolder.getRequest().getProperty(Constants.HTTP2_ERROR);
+            ResetStreamException streamReset = new ResetStreamException(STREAM_WAS_RESET, http2Error == null ?
+                    Http2Error.STREAM_CLOSED.code() : ((Http2Error) http2Error).code());
+            long errorCode = http2Error == null ? Http2Error.STREAM_CLOSED.code() : ((Http2Error) http2Error).code();
+            outboundMsgHolder.getResponseFuture().notifyHttpListener(streamReset);
+            encoder.writeRstStream(ctx, streamId, errorCode, ctx.newPromise());
+            http2ClientChannel.getDataEventListeners()
+                    .forEach(dataEventListener -> dataEventListener.onStreamReset(streamId));
+            ctx.flush();
+            return;
+        }
+
         boolean release = true;
         try {
             boolean endStream = msg instanceof LastHttpContent;
