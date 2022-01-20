@@ -333,8 +333,6 @@ class Utils {
     private static ListenerConfiguration setListenerConfiguration(String keyStore, String keyStorePassword,
             String type) {
         List<Parameter> serverParams = new ArrayList<>(1);
-        Parameter paramServerCiphers = new Parameter("ciphers", "TLS_RSA_WITH_AES_128_CBC_SHA");
-        serverParams.add(paramServerCiphers);
         ListenerConfiguration listenerConfiguration = ListenerConfiguration.getDefault();
         listenerConfiguration.setParameters(serverParams);
         listenerConfiguration.setPort(TestUtil.SERVER_PORT3);
