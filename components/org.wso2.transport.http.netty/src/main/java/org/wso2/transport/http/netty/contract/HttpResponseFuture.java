@@ -19,7 +19,7 @@
 
 package org.wso2.transport.http.netty.contract;
 
-import org.wso2.transport.http.netty.contractimpl.common.BackPressureHandler;
+import org.wso2.transport.http.netty.message.BackPressureObservable;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.ResponseHandle;
 
@@ -68,11 +68,11 @@ public interface HttpResponseFuture {
     void resetStatus();
 
     /**
-     * Sets back pressure handler.
+     * Sets back pressure observable.
      *
-     * @param backPressureHandler which handles backpressure
+     * @param backPressureObservable which allows listeners to register and get notified
      */
-    void setBackPressureHandler(BackPressureHandler backPressureHandler);
+    void setBackPressureObservable(BackPressureObservable backPressureObservable);
 
     /**
      * Makes the async operation sync.
