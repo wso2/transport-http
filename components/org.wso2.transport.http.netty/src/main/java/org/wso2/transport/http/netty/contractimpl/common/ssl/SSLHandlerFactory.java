@@ -86,7 +86,8 @@ public class SSLHandlerFactory {
             }
             KeyManager[] keyManagers = null;
             if (sslConfig.getKeyStore() != null) {
-                KeyStore ks = getKeyStore(sslConfig.getKeyStore(), sslConfig.getKeyStorePass());
+                KeyStore ks = getKeyStore(sslConfig.getKeyStore(), sslConfig.getKeyStorePass(),
+                        sslConfig.getKeyStoreType());
                 // Set up key manager factory to use our key store
                 kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
                 if (ks != null) {
@@ -98,7 +99,8 @@ public class SSLHandlerFactory {
             }
             TrustManager[] trustManagers = null;
             if (sslConfig.getTrustStore() != null) {
-                KeyStore tks = getKeyStore(sslConfig.getTrustStore(), sslConfig.getTrustStorePass());
+                KeyStore tks = getKeyStore(sslConfig.getTrustStore(), sslConfig.getTrustStorePass(),
+                        sslConfig.getTrustStoreType());
                 tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                 tmf.init(tks);
                 trustManagers = tmf.getTrustManagers();
@@ -123,9 +125,8 @@ public class SSLHandlerFactory {
         }
     }
 
-    private KeyStore getKeyStore(File keyStore, String keyStorePassword) throws IOException {
+    private KeyStore getKeyStore(File keyStore, String keyStorePassword, String tlsStoreType) throws IOException {
         KeyStore ks = null;
-        String  tlsStoreType = sslConfig.getTLSStoreType();
         if (keyStore != null && keyStorePassword != null) {
             try (InputStream is = new FileInputStream(keyStore)) {
                 ks = KeyStore.getInstance(tlsStoreType);

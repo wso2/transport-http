@@ -102,7 +102,11 @@ public class SslConfiguration {
     }
 
     public void setTLSStoreType(String tlsStoreType) {
-        sslConfig.setTLSStoreType(tlsStoreType);
+        sslConfig.setKeyStoreType(tlsStoreType);
+    }
+
+    public void setTrustStoreType(String trustStoreType) {
+        sslConfig.setTrustStoreType(trustStoreType);
     }
 
     public void setValidateCertEnabled(boolean validateCertEnabled) {
@@ -239,8 +243,10 @@ public class SslConfiguration {
 
         String sslProtocol = sslConfig.getSSLProtocol() != null ? sslConfig.getSSLProtocol() : TLS_PROTOCOL;
         sslConfig.setSSLProtocol(sslProtocol);
-        String tlsStoreType = sslConfig.getTLSStoreType() != null ? sslConfig.getTLSStoreType() : JKS;
-        sslConfig.setTLSStoreType(tlsStoreType);
+        String keyStoreType = sslConfig.getKeyStoreType() != null ? sslConfig.getKeyStoreType() : JKS;
+        sslConfig.setKeyStoreType(keyStoreType);
+        String trustStoreType = sslConfig.getTrustStoreType() != null ? sslConfig.getTrustStoreType() : keyStoreType;
+        sslConfig.setTrustStoreType(trustStoreType);
 
         if (sslConfig.getTrustStore() != null) {
             if (!sslConfig.getTrustStore().exists()) {
@@ -272,8 +278,10 @@ public class SslConfiguration {
         sslConfig.setTrustStore(sslConfig.getTrustStore()).setTrustStorePass(sslConfig.getTrustStorePass());
         String sslProtocol = sslConfig.getSSLProtocol() != null ? sslConfig.getSSLProtocol() : TLS_PROTOCOL;
         sslConfig.setSSLProtocol(sslProtocol);
-        String tlsStoreType = sslConfig.getTLSStoreType() != null ? sslConfig.getTLSStoreType() : JKS;
-        sslConfig.setTLSStoreType(tlsStoreType);
+        String keyStoreType = sslConfig.getKeyStoreType() != null ? sslConfig.getKeyStoreType() : JKS;
+        sslConfig.setKeyStoreType(keyStoreType);
+        String trustStoreType = sslConfig.getTrustStoreType() != null ? sslConfig.getTrustStoreType() : keyStoreType;
+        sslConfig.setTrustStoreType(trustStoreType);
 
         if (parameters != null) {
             for (Parameter parameter : parameters) {
