@@ -155,6 +155,14 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
     }
 
     @Override
+    public HttpClientConnector createHttpClientConnector(BootstrapConfiguration bootstrapConfig,
+                                                         SenderConfiguration senderConfiguration,
+                                                         ConnectionManager connectionManager) {
+
+        return new DefaultHttpClientConnector(connectionManager, senderConfiguration, bootstrapConfig, clientGroup);
+    }
+
+    @Override
     public WebSocketClientConnector createWsClientConnector(WebSocketClientConnectorConfig clientConnectorConfig) {
         return new DefaultWebSocketClientConnector(clientConnectorConfig, clientGroup);
     }

@@ -24,6 +24,7 @@ import org.wso2.transport.http.netty.contract.config.SenderConfiguration;
 import org.wso2.transport.http.netty.contract.config.ServerBootstrapConfiguration;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnector;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnectorConfig;
+import org.wso2.transport.http.netty.contractimpl.sender.channel.BootstrapConfiguration;
 import org.wso2.transport.http.netty.contractimpl.sender.channel.pool.ConnectionManager;
 
 import java.util.Map;
@@ -62,6 +63,18 @@ public interface HttpWsConnectorFactory {
      */
     HttpClientConnector createHttpClientConnector(Map<String, Object> transportProperties,
         SenderConfiguration senderConfiguration, ConnectionManager connectionManager);
+
+    /**
+     * Creates a client connector with given client bootstrap configuration and connection manager.
+     *
+     * @param bootstrapConfiguration Represents the client bootstrap configurations.
+     * @param senderConfiguration    Represents the configurations related to client channel creation
+     * @param connectionManager      Manages the client pool
+     * @return the HttpClientConnector
+     */
+    HttpClientConnector createHttpClientConnector(BootstrapConfiguration bootstrapConfiguration,
+                                                  SenderConfiguration senderConfiguration,
+                                                  ConnectionManager connectionManager);
 
     /**
      * This method is used to get WebSocket client connector.
