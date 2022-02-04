@@ -80,7 +80,7 @@ public class OCSPResponseBuilder {
 
         if (sslConfig.getKeyStore() != null) {
             KeyStore keyStore = getKeyStore(sslConfig.getKeyStore(), sslConfig.getKeyStorePass(),
-                    sslConfig.getTLSStoreType());
+                    sslConfig.getKeyStoreType());
             if (keyStore != null) {
                 getUserCerAndIssuer(keyStore);
             }

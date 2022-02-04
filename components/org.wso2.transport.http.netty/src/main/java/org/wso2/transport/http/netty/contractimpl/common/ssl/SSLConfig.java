@@ -39,7 +39,8 @@ public class SSLConfig {
     private File trustStore;
     private String trustStorePass;
     private String sslProtocol;
-    private String tlsStoreType;
+    private String keyStoreType;
+    private String trustStoreType;
     private String[] cipherSuites;
     private String[] enableProtocols;
     private boolean enableSessionCreation = true;
@@ -160,12 +161,20 @@ public class SSLConfig {
         return sslProtocol;
     }
 
-    public String getTLSStoreType() {
-        return tlsStoreType;
+    public String getKeyStoreType() {
+        return keyStoreType;
     }
 
-    public void setTLSStoreType(String tlsStoreType) {
-        this.tlsStoreType = tlsStoreType;
+    public void setKeyStoreType(String tlsStoreType) {
+        this.keyStoreType = tlsStoreType;
+    }
+
+    public String getTrustStoreType() {
+        return trustStoreType;
+    }
+
+    public void setTrustStoreType(String trustStoreType) {
+        this.trustStoreType = trustStoreType;
     }
 
     public boolean isEnableSessionCreation() {
