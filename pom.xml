@@ -341,8 +341,8 @@
         <slf4j.logging.package.import.version.range>[1.7.1, 2.0.0)</slf4j.logging.package.import.version.range>
 
         <carbon.p2.plugin.version>2.0.1</carbon.p2.plugin.version>
-        <org.snakeyaml.version>1.26.0.wso2v1</org.snakeyaml.version>
-        <org.snakeyaml.package.import.version.range>[1.26.0, 2.0.0)</org.snakeyaml.package.import.version.range>
+        <org.snakeyaml.version>1.31.0.wso2v1</org.snakeyaml.version>
+        <org.snakeyaml.package.import.version.range>[1.31.0, 2.0.0)</org.snakeyaml.package.import.version.range>
 
         <!-- Package exports -->
         <netty.transport.package.export.version>${project.version}</netty.transport.package.export.version>
