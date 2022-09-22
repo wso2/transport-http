@@ -222,6 +222,14 @@
                 <artifactId>netty-tcnative-boringssl-static</artifactId>
                 <version>${netty-tcnative-boringssl-static.version}</version>
             </dependency>
+
+            <!--Java 11 related dependencies-->
+            <dependency>
+                <groupId>org.wso2.orbit.javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>${org.wso2.orbit.javax.xml.bind.version}</version>
+                <type>jar</type>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -370,6 +378,9 @@
         <httpasyncclient.version>4.0.2</httpasyncclient.version>
         <httpmime.version>4.3.6</httpmime.version>
         <commons-io.version>2.4</commons-io.version>
+
+        <!-- Java 11 related dependencies -->
+        <org.wso2.orbit.javax.xml.bind.version>2.3.1.wso2v1</org.wso2.orbit.javax.xml.bind.version>
     </properties>
 
 </project>

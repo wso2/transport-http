@@ -138,6 +138,12 @@
             <artifactId>unirest-java</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Java11 dependencies -->
+        <dependency>
+            <groupId>org.wso2.orbit.javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
