@@ -68,6 +68,11 @@
             <artifactId>netty-resolver</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-unix-common</artifactId>
+            <version>${netty.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-pool.wso2</groupId>
             <artifactId>commons-pool</artifactId>
         </dependency>
@@ -156,6 +161,10 @@
                                 </bundle>
                                 <bundle>
                                     <symbolicName>io.netty.resolver</symbolicName>
+                                    <version>${netty.version}</version>
+                                </bundle>
+                                <bundle>
+                                    <symbolicName>io.netty.transport.native.unix.common</symbolicName>
                                     <version>${netty.version}</version>
                                 </bundle>
                                 <bundle>

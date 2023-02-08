@@ -101,6 +101,11 @@
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-unix-common</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
@@ -363,7 +368,7 @@
         <org.atomikos.wso2.version>3.8.0.wso2v1</org.atomikos.wso2.version>
         <bcprov-jdk15on.version>1.69</bcprov-jdk15on.version>
         <bcpkix-jdk15on.version>1.69</bcpkix-jdk15on.version>
-        <netty-tcnative-boringssl-static.version>2.0.52.Final</netty-tcnative-boringssl-static.version>
+        <netty-tcnative-boringssl-static.version>2.0.54.Final</netty-tcnative-boringssl-static.version>
 
         <unirest.version>1.4.9</unirest.version>
         <httpclient.version>4.3.6</httpclient.version>
