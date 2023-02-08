@@ -164,10 +164,6 @@
                                     <version>${netty.version}</version>
                                 </bundle>
                                 <bundle>
-                                    <symbolicName>io.netty.transport.native.unix.common</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
                                     <symbolicName>commons-pool</symbolicName>
                                     <version>${commons.pool.version}</version>
                                 </bundle>
