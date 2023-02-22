@@ -39,7 +39,6 @@ import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.RevokedStatus;
 import org.bouncycastle.cert.ocsp.SingleResp;
 import org.bouncycastle.cert.ocsp.UnknownStatus;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.DigestCalculatorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
@@ -59,6 +58,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.Provider;
 import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -199,15 +199,30 @@ public class OCSPVerifier implements RevocationVerifier {
     public static OCSPReq generateOCSPRequest(X509Certificate issuerCert, BigInteger serialNumber)
             throws CertificateVerificationException {
 
-        //Programatically adding Bouncy Castle as the security provider. So no need to manually set. Once the programme
-        // is over security provider will also be removed.
-        Security.addProvider(new BouncyCastleProvider());
+        // Programmatically adding Bouncy Castle as the security provider. So no need to manually set. Once the
+        // programme is over security provider will also be removed.
+        String jceProvider = getPreferredJceProvider();
+        String providerClass;
+        if (Constants.BOUNCY_CASTLE_PROVIDER.equals(jceProvider)) {
+            providerClass = "org.bouncycastle.jce.provider.BouncyCastleProvider";
+        } else if (Constants.BOUNCY_CASTLE_FIPS_PROVIDER.equals(jceProvider)) {
+            providerClass = "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider";
+        } else {
+            throw new CertificateVerificationException("Unsupported JCE provider: " + jceProvider);
+        }
+
+        try {
+            Security.addProvider((Provider) Class.forName(providerClass).getDeclaredConstructor().newInstance());
+        } catch (Exception e) {
+            throw new CertificateVerificationException("Error while initializing the JCE provider: "
+                    + providerClass, e);
+        }
         try {
 
             byte[] issuerCertEnc = issuerCert.getEncoded();
             X509CertificateHolder certificateHolder = new X509CertificateHolder(issuerCertEnc);
             DigestCalculatorProvider digCalcProv = new JcaDigestCalculatorProviderBuilder()
-                    .setProvider(Constants.BOUNCY_CASTLE_PROVIDER).build();
+                    .setProvider(jceProvider).build();
 
             //  CertID structure is used to uniquely identify certificates that are the subject of
             // an OCSP request or response and has an ASN.1 definition. CertID structure is defined in RFC 2560.
@@ -287,4 +302,16 @@ public class OCSPVerifier implements RevocationVerifier {
         return ocspUrlList;
     }
 
+    /**
+     * Get the preferred JCE provider.
+     *
+     * @return the preferred JCE provider
+     */
+    private static String getPreferredJceProvider() {
+        String provider = System.getProperty("security.jce.provider");
+        if (provider != null && provider.equalsIgnoreCase(Constants.BOUNCY_CASTLE_FIPS_PROVIDER)) {
+            return Constants.BOUNCY_CASTLE_FIPS_PROVIDER;
+        }
+        return Constants.BOUNCY_CASTLE_PROVIDER;
+    }
 }
