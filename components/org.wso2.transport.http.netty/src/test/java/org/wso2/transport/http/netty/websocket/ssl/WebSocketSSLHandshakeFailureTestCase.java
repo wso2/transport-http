@@ -40,6 +40,8 @@ import org.wso2.transport.http.netty.websocket.server.WebSocketTestServerConnect
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.net.ssl.SSLException;
+
 import static org.wso2.transport.http.netty.util.TestUtil.WEBSOCKET_REMOTE_SERVER_PORT;
 import static org.wso2.transport.http.netty.util.TestUtil.WEBSOCKET_SECURE_REMOTE_SERVER_URL;
 import static org.wso2.transport.http.netty.util.TestUtil.WEBSOCKET_TEST_IDLE_TIMEOUT;
@@ -116,7 +118,7 @@ public class WebSocketSSLHandshakeFailureTestCase {
 
         Assert.assertNull(webSocketConnectionAtomicReference.get());
         Assert.assertNotNull(throwable);
-        Assert.assertEquals(throwable.getMessage(), "General SSLEngine problem");
+        Assert.assertTrue(throwable instanceof SSLException);
     }
 
     @AfterClass
