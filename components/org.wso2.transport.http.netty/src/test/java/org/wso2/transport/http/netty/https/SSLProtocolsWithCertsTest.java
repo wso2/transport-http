@@ -33,6 +33,7 @@ import org.wso2.transport.http.netty.contract.config.ListenerConfiguration;
 import org.wso2.transport.http.netty.contract.config.Parameter;
 import org.wso2.transport.http.netty.contract.config.SenderConfiguration;
 import org.wso2.transport.http.netty.contract.exceptions.ServerConnectorException;
+import org.wso2.transport.http.netty.contract.exceptions.SslException;
 import org.wso2.transport.http.netty.contractimpl.DefaultHttpWsConnectorFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.HttpMessageDataStreamer;
@@ -68,7 +69,7 @@ public class SSLProtocolsWithCertsTest {
     public static Object[][] cipherSuites() {
         // true = expecting a SSL hand shake failure.
         // false = expecting no errors.
-        return new Object[][] { { "TLSv1.1", "TLSv1.1", false, TestUtil.SERVER_PORT1 },
+        return new Object[][] { { "TLSv1.2", "TLSv1.2", false, TestUtil.SERVER_PORT1 },
                 { "TLSv1.1", "TLSv1.2", true, TestUtil.SERVER_PORT2 } };
     }
 
@@ -146,9 +147,7 @@ public class SSLProtocolsWithCertsTest {
                 assertNotNull(listener.getThrowables());
                 boolean hasSSLException = false;
                 for (Throwable throwable : listener.getThrowables()) {
-                    if (throwable.getMessage() != null && (
-                            throwable.getMessage().contains("javax.net.ssl.SSLHandshakeException") || throwable
-                                    .getMessage().contains("handshake_failure"))) {
+                    if (throwable instanceof SslException) {
                         hasSSLException = true;
                         break;
                     }
