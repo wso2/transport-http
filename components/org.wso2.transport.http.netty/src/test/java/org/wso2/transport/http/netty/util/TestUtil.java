@@ -43,6 +43,7 @@ import org.wso2.transport.http.netty.message.HttpMessageDataStreamer;
 import org.wso2.transport.http.netty.util.server.HttpServer;
 import org.wso2.transport.http.netty.util.server.HttpsServer;
 import org.wso2.transport.http.netty.util.server.ServerThread;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import org.yaml.snakeyaml.introspector.BeanAccess;
@@ -221,7 +222,7 @@ public class TestUtil {
             try (Reader in = new InputStreamReader(new FileInputStream(file), StandardCharsets.ISO_8859_1)) {
                 Yaml yaml = new Yaml(new CustomClassLoaderConstructor
                                              (TransportsConfiguration.class,
-                                              TransportsConfiguration.class.getClassLoader()));
+                                              TransportsConfiguration.class.getClassLoader(), new LoaderOptions()));
                 yaml.setBeanAccess(BeanAccess.FIELD);
                 transportsConfiguration = yaml.loadAs(in, TransportsConfiguration.class);
             } catch (IOException e) {

@@ -17,6 +17,7 @@ package org.wso2.transport.http.netty.contract.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import org.yaml.snakeyaml.introspector.BeanAccess;
@@ -80,7 +81,8 @@ public class ConfigurationBuilder {
         if (file.exists()) {
             try (Reader in = new InputStreamReader(new FileInputStream(file), StandardCharsets.ISO_8859_1)) {
                 Yaml yaml = new Yaml(new CustomClassLoaderConstructor
-                        (TransportsConfiguration.class, TransportsConfiguration.class.getClassLoader()));
+                        (TransportsConfiguration.class, TransportsConfiguration.class.getClassLoader(),
+                                new LoaderOptions()));
                 yaml.setBeanAccess(BeanAccess.FIELD);
                 transportsConfiguration = yaml.loadAs(in, TransportsConfiguration.class);
             } catch (IOException e) {
