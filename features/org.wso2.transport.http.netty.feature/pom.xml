@@ -171,9 +171,8 @@
                                     <symbolicName>commons-pool</symbolicName>
                                     <version>${commons.pool.version}</version>
                                 </bundle>
-
                                 <bundle>
-                                    <symbolicName>snakeyaml</symbolicName>
+                                    <symbolicName>org.yaml.snakeyaml</symbolicName>
                                     <version>${org.snakeyaml.version}</version>
                                 </bundle>
                                 <bundle>
