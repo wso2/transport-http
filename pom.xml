@@ -199,7 +199,7 @@
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.wso2.orbit.org.yaml</groupId>
+                <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
                 <version>${org.snakeyaml.version}</version>
             </dependency>
@@ -405,7 +405,7 @@
         <!-- Dependencies -->
         <carbon.kernel.package.import.version.range>[5.0.0, 6.0.0)</carbon.kernel.package.import.version.range>
 
-        <netty.version>4.1.94.Final</netty.version>
+        <netty.version>4.1.97.Final</netty.version>
         <netty.package.import.version.range>[4.0.30, 5.0.0)</netty.package.import.version.range>
         <equinox.osgi.version>3.10.2.v20150203-1939</equinox.osgi.version>
         <equinox.osgi.services.version>3.4.0.v20140312-2051</equinox.osgi.services.version>
@@ -434,8 +434,8 @@
         <slf4j.logging.package.import.version.range>[1.7.1, 2.0.0)</slf4j.logging.package.import.version.range>
 
         <carbon.p2.plugin.version>2.0.1</carbon.p2.plugin.version>
-        <org.snakeyaml.version>2.0.0.wso2v1</org.snakeyaml.version>
-        <org.snakeyaml.package.import.version.range>[1.32.0, 2.0.0)</org.snakeyaml.package.import.version.range>
+        <org.snakeyaml.version>2.0</org.snakeyaml.version>
+        <org.snakeyaml.package.import.version.range>[1.32.0, 3.0.0)</org.snakeyaml.package.import.version.range>
 
         <!-- Package exports -->
         <netty.transport.package.export.version>${project.version}</netty.transport.package.export.version>
