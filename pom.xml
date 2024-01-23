@@ -422,8 +422,7 @@
         <commons.pool.package.import.version.range>[1.5.6, 2.0.0)</commons.pool.package.import.version.range>
         <commons-io.wso2.version>2.11.0.wso2v1</commons-io.wso2.version>
         <commons-io.version.range>[2.4.0, 2.5)</commons-io.version.range>
-        <guava.version>18.0</guava.version>
-        <guava.version.range>[18.0,19.0)</guava.version.range>
+        <guava.version>33.0.0-jre</guava.version>
         <org.apache.commons.pool2.version>2.4.2</org.apache.commons.pool2.version>
         <commons-net.version>3.6</commons-net.version>
 
