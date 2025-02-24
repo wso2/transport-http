@@ -34,12 +34,12 @@ import java.util.Objects;
 public class DefaultWebSocketClientConnector implements WebSocketClientConnector {
 
     private final WebSocketClient webSocketClient;
-    private final SSLConfig sslConfig;
+    private final WebSocketClientConnectorConfig clientConnectorConfig;
 
     public DefaultWebSocketClientConnector(WebSocketClientConnectorConfig clientConnectorConfig,
             EventLoopGroup wsClientEventLoopGroup) {
         this.webSocketClient = new WebSocketClient(wsClientEventLoopGroup, clientConnectorConfig);
-        this.sslConfig = clientConnectorConfig.getClientSSLConfig();
+        this.clientConnectorConfig = clientConnectorConfig;
     }
 
     @Override
@@ -49,6 +49,7 @@ public class DefaultWebSocketClientConnector implements WebSocketClientConnector
 
     @Override
     public void initializeSSLContext() throws Exception {
+        SSLConfig sslConfig = clientConnectorConfig.getClientSSLConfig();
         if (Objects.nonNull(sslConfig)) {
             sslConfig.initializeSSLContext(false);
         }
