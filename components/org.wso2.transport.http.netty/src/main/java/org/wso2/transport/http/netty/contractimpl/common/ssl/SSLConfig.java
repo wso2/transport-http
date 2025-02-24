@@ -419,7 +419,6 @@ public class SSLConfig {
     }
 
     public boolean hasSslCtxInitialized() {
-        return Objects.nonNull(sslHandlerFactory) && (Objects.nonNull(sslContext) ||
-                Objects.nonNull(referenceCountedOpenSslContext));
+        return Objects.nonNull(sslHandlerFactory);
     }
 }
