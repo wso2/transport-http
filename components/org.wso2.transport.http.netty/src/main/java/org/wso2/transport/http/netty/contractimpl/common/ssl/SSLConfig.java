@@ -18,10 +18,17 @@
  */
 package org.wso2.transport.http.netty.contractimpl.common.ssl;
 
+import io.netty.handler.ssl.ReferenceCountedOpenSslContext;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * A class that encapsulates SSLContext configuration.
@@ -65,6 +72,9 @@ public class SSLConfig {
     private long handshakeTimeOut;
     private boolean disableSsl = false;
     private boolean useJavaDefaults = false;
+    private ReferenceCountedOpenSslContext referenceCountedOpenSslContext;
+    private SslContext sslContext;
+    private SSLHandlerFactory sslHandlerFactory;
 
     public SSLConfig() {}
 
@@ -352,5 +362,64 @@ public class SSLConfig {
 
     public void setUseJavaDefaults() {
         this.useJavaDefaults = true;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public ReferenceCountedOpenSslContext getReferenceCountedOpenSslContext() {
+        return referenceCountedOpenSslContext;
+    }
+
+    public SSLHandlerFactory getSslHandlerFactory() {
+        return sslHandlerFactory;
+    }
+
+    public void initializeSSLContext(boolean isHttp2) throws Exception {
+        if (isHttp2) {
+            initializeSSLContextForHTTP2();
+        } else {
+            initializeSSLContextForHTTP();
+        }
+    }
+
+    private void initializeSSLContextForHTTP() throws Exception {
+        sslHandlerFactory = new SSLHandlerFactory(this);
+        if (isOcspStaplingEnabled()) {
+            sslHandlerFactory.createSSLContextFromKeystores(false);
+            referenceCountedOpenSslContext = sslHandlerFactory.buildClientReferenceCountedOpenSslContext();
+        } else {
+            if (disableSsl) {
+                sslContext = SslContextBuilder.forClient()
+                        .sslProvider(SslProvider.JDK)
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .build();
+            } else {
+                if (getTrustStore() != null) {
+                    sslHandlerFactory.createSSLContextFromKeystores(false);
+                } else {
+                    sslContext = sslHandlerFactory.createHttpTLSContextForClient();
+                }
+            }
+        }
+    }
+
+    private void initializeSSLContextForHTTP2() throws Exception {
+        sslHandlerFactory = new SSLHandlerFactory(this);
+        if (isOcspStaplingEnabled()) {
+            referenceCountedOpenSslContext = (ReferenceCountedOpenSslContext) sslHandlerFactory
+                    .createHttp2TLSContextForClient(isOcspStaplingEnabled());
+        } else if (isDisableSsl()) {
+            sslContext = Util.createInsecureSslEngineForHttp2();
+        } else {
+            sslHandlerFactory.createSSLContextFromKeystores(false);
+            sslContext = sslHandlerFactory.createHttp2TLSContextForClient(false);
+        }
+    }
+
+    public boolean hasSslCtxInitialized() {
+        return Objects.nonNull(sslHandlerFactory) && (Objects.nonNull(sslContext) ||
+                Objects.nonNull(referenceCountedOpenSslContext));
     }
 }

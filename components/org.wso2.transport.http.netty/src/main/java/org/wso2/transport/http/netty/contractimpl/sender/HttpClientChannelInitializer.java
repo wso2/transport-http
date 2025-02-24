@@ -59,7 +59,6 @@ import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2ConnectionMa
 import org.wso2.transport.http.netty.contractimpl.sender.http2.Http2TargetHandler;
 
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
 
 import static io.netty.handler.logging.LogLevel.TRACE;
 import static org.wso2.transport.http.netty.contract.Constants.MAX_ENTITY_BODY_VALIDATION_HANDLER;
@@ -87,7 +86,6 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
     private HttpRoute httpRoute;
     private SenderConfiguration senderConfiguration;
     private ConnectionAvailabilityFuture connectionAvailabilityFuture;
-    private SSLHandlerFactory sslHandlerFactory;
     private final InboundMsgSizeValidationConfig responseSizeValidationConfig;
 
     public HttpClientChannelInitializer(SenderConfiguration senderConfiguration, HttpRoute httpRoute,
@@ -116,9 +114,6 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
         }
         http2ConnectionHandler = connectionHandlerBuilder.connection(connection).frameListener(frameListener).build();
         http2TargetHandler = new Http2TargetHandler(connection, http2ConnectionHandler.encoder());
-        if (sslConfig != null) {
-            sslHandlerFactory = new SSLHandlerFactory(sslConfig);
-        }
     }
 
     @Override
@@ -132,6 +127,9 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
         targetHandler.setKeepAliveConfig(getKeepAliveConfig());
         if (http2) {
             if (sslConfig != null) {
+                if (!sslConfig.hasSslCtxInitialized()) {
+                    sslConfig.initializeSSLContext(http2);
+                }
                 configureSslForHttp2(socketChannel, clientPipeline, sslConfig);
             } else if (senderConfiguration.isForceHttp2()) {
                 configureHttp2Pipeline(clientPipeline);
@@ -140,6 +138,9 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
             }
         } else {
             if (sslConfig != null) {
+                if (!sslConfig.hasSslCtxInitialized()) {
+                    sslConfig.initializeSSLContext(http2);
+                }
                 connectionAvailabilityFuture.setSSLEnabled(true);
                 SSLEngine sslEngine = Util
                         .configureHttpPipelineForSSL(socketChannel, httpRoute.getHost(), httpRoute.getPort(),
@@ -170,13 +171,12 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
         }
     }
 
-    private void configureSslForHttp2(SocketChannel ch, ChannelPipeline clientPipeline, SSLConfig sslConfig)
-            throws SSLException {
+    private void configureSslForHttp2(SocketChannel ch, ChannelPipeline clientPipeline, SSLConfig sslConfig) {
         connectionAvailabilityFuture.setSSLEnabled(true);
+        SSLHandlerFactory sslHandlerFactory = sslConfig.getSslHandlerFactory();
         if (sslConfig.isOcspStaplingEnabled()) {
             ReferenceCountedOpenSslContext referenceCountedOpenSslContext =
-                    (ReferenceCountedOpenSslContext) sslHandlerFactory.
-                            createHttp2TLSContextForClient(sslConfig.isOcspStaplingEnabled());
+                    sslConfig.getReferenceCountedOpenSslContext();
             if (referenceCountedOpenSslContext != null) {
                 SslHandler sslHandler = referenceCountedOpenSslContext.newHandler(ch.alloc());
                 ReferenceCountedOpenSslEngine engine = (ReferenceCountedOpenSslEngine) sslHandler.engine();
@@ -185,12 +185,11 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
                 ch.pipeline().addLast(new OCSPStaplingHandler(engine));
             }
         } else if (sslConfig.isDisableSsl()) {
-            SslContext sslCtx = Util.createInsecureSslEngineForHttp2();
+            SslContext sslCtx = sslConfig.getSslContext();
             SslHandler sslHandler = sslCtx.newHandler(ch.alloc(), httpRoute.getHost(), httpRoute.getPort());
             clientPipeline.addLast(sslHandler);
         } else {
-            sslHandlerFactory.createSSLContextFromKeystores(false);
-            SslContext sslCtx = sslHandlerFactory.createHttp2TLSContextForClient(false);
+            SslContext sslCtx = sslConfig.getSslContext();
             SslHandler sslHandler = sslCtx.newHandler(ch.alloc(), httpRoute.getHost(), httpRoute.getPort());
             SSLEngine sslEngine = sslHandler.engine();
             sslHandlerFactory.setSNIServerNames(sslEngine, httpRoute.getHost());

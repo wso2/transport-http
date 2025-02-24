@@ -359,19 +359,16 @@ public class Util {
      * @param host          host of the connection
      * @param port          port of the connection
      * @return the {@link SSLEngine} which enables secure communication
-     * @throws SSLException if any error occurs in the SSL connection
      */
     public static SSLEngine configureHttpPipelineForSSL(SocketChannel socketChannel, String host, int port,
-                                                        SSLConfig sslConfig) throws SSLException {
+                                                        SSLConfig sslConfig) {
         LOG.debug("adding ssl handler");
         SSLEngine sslEngine = null;
         SslHandler sslHandler;
         ChannelPipeline pipeline = socketChannel.pipeline();
-        SSLHandlerFactory sslHandlerFactory = new SSLHandlerFactory(sslConfig);
         if (sslConfig.isOcspStaplingEnabled()) {
-            sslHandlerFactory.createSSLContextFromKeystores(false);
-            ReferenceCountedOpenSslContext referenceCountedOpenSslContext = sslHandlerFactory
-                    .buildClientReferenceCountedOpenSslContext();
+            ReferenceCountedOpenSslContext referenceCountedOpenSslContext =
+                    sslConfig.getReferenceCountedOpenSslContext();
 
             if (referenceCountedOpenSslContext != null) {
                 sslHandler = referenceCountedOpenSslContext.newHandler(socketChannel.alloc());
@@ -382,14 +379,12 @@ public class Util {
             }
         } else {
             if (sslConfig.isDisableSsl()) {
-                sslEngine = createInsecureSslEngine(socketChannel, host, port);
+                sslEngine = createInsecureSslEngine(socketChannel, host, port, sslConfig.getSslContext());
             } else {
                 if (sslConfig.getTrustStore() != null) {
-                    sslHandlerFactory.createSSLContextFromKeystores(false);
-                    sslEngine = instantiateAndConfigSSL(sslConfig, host, port,
-                            sslConfig.isHostNameVerificationEnabled(), sslHandlerFactory);
+                    sslEngine = instantiateAndConfigSSL(sslConfig, host, port);
                 } else {
-                    sslEngine = getSslEngineForCerts(socketChannel, host, port, sslConfig, sslHandlerFactory);
+                    sslEngine = getSslEngineForCerts(socketChannel, host, port, sslConfig);
                 }
             }
             sslHandler = new SslHandler(sslEngine);
@@ -404,8 +399,9 @@ public class Util {
     }
 
     private static SSLEngine getSslEngineForCerts(SocketChannel socketChannel, String host, int port,
-            SSLConfig sslConfig, SSLHandlerFactory sslHandlerFactory) throws SSLException {
-        SslContext sslContext = sslHandlerFactory.createHttpTLSContextForClient();
+                                                  SSLConfig sslConfig) {
+        SSLHandlerFactory sslHandlerFactory = sslConfig.getSslHandlerFactory();
+        SslContext sslContext = sslConfig.getSslContext();
         SslHandler sslHandler = sslContext.newHandler(socketChannel.alloc(), host, port);
         SSLEngine sslEngine = sslHandler.engine();
         sslHandlerFactory.addCommonConfigs(sslEngine);
@@ -416,10 +412,8 @@ public class Util {
         return sslEngine;
     }
 
-    private static SSLEngine createInsecureSslEngine(SocketChannel socketChannel, String host, int port)
-            throws SSLException {
-        SslContext sslContext = SslContextBuilder.forClient().sslProvider(SslProvider.JDK)
-                .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+    private static SSLEngine createInsecureSslEngine(SocketChannel socketChannel, String host, int port,
+                                                     SslContext sslContext) {
         SslHandler sslHandler = sslContext.newHandler(socketChannel.alloc(), host, port);
         return sslHandler.engine();
     }
@@ -447,21 +441,17 @@ public class Util {
      * @param sslConfig ssl related configurations
      * @param host host of the connection
      * @param port port of the connection
-     * @param hostNameVerificationEnabled true if host name verification is enabled
-     * @param sslHandlerFactory an instance of sslHandlerFactory
      * @return ssl engine
      */
-    private static SSLEngine instantiateAndConfigSSL(SSLConfig sslConfig, String host, int port,
-            boolean hostNameVerificationEnabled, SSLHandlerFactory sslHandlerFactory) {
+    private static SSLEngine instantiateAndConfigSSL(SSLConfig sslConfig, String host, int port) {
         // set the pipeline factory, which creates the pipeline for each newly created channels
-        SSLEngine sslEngine = null;
-        if (sslConfig != null) {
-            sslEngine = sslHandlerFactory.buildClientSSLEngine(host, port);
-            sslEngine.setUseClientMode(true);
-            sslHandlerFactory.setSNIServerNames(sslEngine, host);
-            if (hostNameVerificationEnabled) {
-                sslHandlerFactory.setHostNameVerfication(sslEngine);
-            }
+        SSLHandlerFactory sslHandlerFactory = sslConfig.getSslHandlerFactory();
+        boolean hostNameVerificationEnabled = sslConfig.isHostNameVerificationEnabled();
+        SSLEngine sslEngine = sslHandlerFactory.buildClientSSLEngine(host, port);
+        sslEngine.setUseClientMode(true);
+        sslHandlerFactory.setSNIServerNames(sslEngine, host);
+        if (hostNameVerificationEnabled) {
+            sslHandlerFactory.setHostNameVerfication(sslEngine);
         }
         return sslEngine;
     }
