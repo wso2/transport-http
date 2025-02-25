@@ -58,6 +58,7 @@ import org.wso2.transport.http.netty.message.ResponseHandle;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import static org.wso2.transport.http.netty.contract.Constants.REMOTE_SERVER_CLOSED_BEFORE_INITIATING_OUTBOUND_REQUEST;
 
@@ -362,5 +363,11 @@ public class DefaultHttpClientConnector implements HttpClientConnector {
         this.socketIdleTimeout = senderConfiguration.getSocketIdleTimeout(Constants.ENDPOINT_TIMEOUT);
         this.sslConfig = senderConfiguration.getClientSSLConfig();
         this.forwardedExtensionConfig = senderConfiguration.getForwardedExtensionConfig();
+    }
+
+    public void initializeSSLContext() throws Exception {
+        if (Objects.nonNull(sslConfig)) {
+            sslConfig.initializeSSLContext(isHttp2);
+        }
     }
 }

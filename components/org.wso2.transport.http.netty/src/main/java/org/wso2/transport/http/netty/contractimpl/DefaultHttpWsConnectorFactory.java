@@ -147,24 +147,64 @@ public class DefaultHttpWsConnectorFactory implements HttpWsConnectorFactory {
     }
 
     @Override
-    public HttpClientConnector createHttpClientConnector(
-        Map<String, Object> transportProperties, SenderConfiguration senderConfiguration,
-        ConnectionManager connectionManager) {
+    public HttpClientConnector createHttpsClientConnector(Map<String, Object> transportProperties,
+                                                          SenderConfiguration senderConfiguration) throws Exception {
+        BootstrapConfiguration bootstrapConfig = new BootstrapConfiguration(transportProperties);
+        ConnectionManager connectionManager = new ConnectionManager(senderConfiguration.getPoolConfiguration());
+        HttpClientConnector httpClientConnector = new DefaultHttpClientConnector(connectionManager,
+                senderConfiguration, bootstrapConfig, clientGroup);
+        httpClientConnector.initializeSSLContext();
+        return httpClientConnector;
+    }
+
+    @Override
+    public HttpClientConnector createHttpClientConnector(Map<String, Object> transportProperties,
+                                                         SenderConfiguration senderConfiguration,
+                                                         ConnectionManager connectionManager) {
         BootstrapConfiguration bootstrapConfig = new BootstrapConfiguration(transportProperties);
         return new DefaultHttpClientConnector(connectionManager, senderConfiguration, bootstrapConfig, clientGroup);
+    }
+
+    @Override
+    public HttpClientConnector createHttpsClientConnector(Map<String, Object> transportProperties,
+                                                          SenderConfiguration senderConfiguration,
+                                                          ConnectionManager connectionManager) throws Exception {
+        BootstrapConfiguration bootstrapConfig = new BootstrapConfiguration(transportProperties);
+        HttpClientConnector httpClientConnector = new DefaultHttpClientConnector(connectionManager,
+                senderConfiguration, bootstrapConfig, clientGroup);
+        httpClientConnector.initializeSSLContext();
+        return httpClientConnector;
     }
 
     @Override
     public HttpClientConnector createHttpClientConnector(BootstrapConfiguration bootstrapConfig,
                                                          SenderConfiguration senderConfiguration,
                                                          ConnectionManager connectionManager) {
-
         return new DefaultHttpClientConnector(connectionManager, senderConfiguration, bootstrapConfig, clientGroup);
+    }
+
+    @Override
+    public HttpClientConnector createHttpsClientConnector(BootstrapConfiguration bootstrapConfig,
+                                                          SenderConfiguration senderConfiguration,
+                                                          ConnectionManager connectionManager) throws Exception {
+        HttpClientConnector httpClientConnector = new DefaultHttpClientConnector(connectionManager,
+                senderConfiguration, bootstrapConfig, clientGroup);
+        httpClientConnector.initializeSSLContext();
+        return httpClientConnector;
     }
 
     @Override
     public WebSocketClientConnector createWsClientConnector(WebSocketClientConnectorConfig clientConnectorConfig) {
         return new DefaultWebSocketClientConnector(clientConnectorConfig, clientGroup);
+    }
+
+    @Override
+    public WebSocketClientConnector createWsClientConnectorWithSSL(
+            WebSocketClientConnectorConfig clientConnectorConfig) throws Exception {
+        WebSocketClientConnector webSocketClientConnector = new DefaultWebSocketClientConnector(clientConnectorConfig,
+                clientGroup);
+        webSocketClientConnector.initializeSSLContext();
+        return webSocketClientConnector;
     }
 
     @Override

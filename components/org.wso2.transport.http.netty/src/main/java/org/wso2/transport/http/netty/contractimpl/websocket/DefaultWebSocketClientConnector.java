@@ -23,7 +23,10 @@ import io.netty.channel.EventLoopGroup;
 import org.wso2.transport.http.netty.contract.websocket.ClientHandshakeFuture;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnector;
 import org.wso2.transport.http.netty.contract.websocket.WebSocketClientConnectorConfig;
+import org.wso2.transport.http.netty.contractimpl.common.ssl.SSLConfig;
 import org.wso2.transport.http.netty.contractimpl.sender.websocket.WebSocketClient;
+
+import java.util.Objects;
 
 /**
  * Implementation of WebSocket client connector.
@@ -31,14 +34,24 @@ import org.wso2.transport.http.netty.contractimpl.sender.websocket.WebSocketClie
 public class DefaultWebSocketClientConnector implements WebSocketClientConnector {
 
     private final WebSocketClient webSocketClient;
+    private final WebSocketClientConnectorConfig clientConnectorConfig;
 
     public DefaultWebSocketClientConnector(WebSocketClientConnectorConfig clientConnectorConfig,
             EventLoopGroup wsClientEventLoopGroup) {
         this.webSocketClient = new WebSocketClient(wsClientEventLoopGroup, clientConnectorConfig);
+        this.clientConnectorConfig = clientConnectorConfig;
     }
 
     @Override
     public ClientHandshakeFuture connect() {
         return webSocketClient.handshake();
+    }
+
+    @Override
+    public void initializeSSLContext() throws Exception {
+        SSLConfig sslConfig = clientConnectorConfig.getClientSSLConfig();
+        if (Objects.nonNull(sslConfig)) {
+            sslConfig.initializeSSLContext(false);
+        }
     }
 }
