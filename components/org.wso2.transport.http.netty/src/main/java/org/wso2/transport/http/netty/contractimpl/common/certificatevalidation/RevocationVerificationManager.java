@@ -20,6 +20,7 @@ package org.wso2.transport.http.netty.contractimpl.common.certificatevalidation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.crl.CRLCache;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.crl.CRLVerifier;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.ocsp.OCSPCache;
@@ -27,6 +28,7 @@ import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.o
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.pathvalidation.CertificatePathValidator;
 
 import java.io.ByteArrayInputStream;
+import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -105,14 +107,20 @@ public class RevocationVerificationManager {
             throws CertificateVerificationException {
         X509Certificate[] certChain = new X509Certificate[certs.length];
         Throwable exceptionThrown;
+        String provider = Util.getPreferredJceProvider();
         for (int i = 0; i < certs.length; i++) {
             try {
                 byte[] encoded = certs[i].getEncoded();
                 ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(encoded);
-                CertificateFactory certificateFactory = CertificateFactory.getInstance(Constants.X_509);
+                CertificateFactory certificateFactory;
+                if (provider != null) {
+                    certificateFactory = CertificateFactory.getInstance(Constants.X_509, provider);
+                } else {
+                    certificateFactory = CertificateFactory.getInstance(Constants.X_509);
+                }
                 certChain[i] = ((X509Certificate) certificateFactory.generateCertificate(byteArrayInputStream));
                 continue;
-            } catch (CertificateEncodingException | CertificateException e) {
+            } catch (CertificateEncodingException | CertificateException | NoSuchProviderException e) {
                 exceptionThrown = e;
             }
             throw new CertificateVerificationException("Cant Convert certificates from javax to java", exceptionThrown);
