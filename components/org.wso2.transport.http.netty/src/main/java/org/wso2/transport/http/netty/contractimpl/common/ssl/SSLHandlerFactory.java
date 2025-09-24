@@ -28,15 +28,17 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import org.wso2.transport.http.netty.contract.Constants;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
@@ -85,11 +87,16 @@ public class SSLHandlerFactory {
                 return SSLContext.getDefault();
             }
             KeyManager[] keyManagers = null;
+            String provider = Util.getPreferredJceProvider();
             if (sslConfig.getKeyStore() != null) {
                 KeyStore ks = getKeyStore(sslConfig.getKeyStore(), sslConfig.getKeyStorePass(),
                         sslConfig.getKeyStoreType());
                 // Set up key manager factory to use our key store
-                kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                if (provider != null) {
+                    kmf = KeyManagerFactory.getInstance(Constants.PKIX, Constants.BCJSSE);
+                } else {
+                    kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                }
                 if (ks != null) {
                     kmf.init(ks, sslConfig.getCertPass() != null ?
                             sslConfig.getCertPass().toCharArray() :
@@ -101,11 +108,19 @@ public class SSLHandlerFactory {
             if (sslConfig.getTrustStore() != null) {
                 KeyStore tks = getKeyStore(sslConfig.getTrustStore(), sslConfig.getTrustStorePass(),
                         sslConfig.getTrustStoreType());
-                tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                if (provider != null) {
+                    tmf = TrustManagerFactory.getInstance(Constants.PKIX, Constants.BCJSSE);
+                } else {
+                    tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                }
                 tmf.init(tks);
                 trustManagers = tmf.getTrustManagers();
             }
-            sslContext = SSLContext.getInstance(protocol);
+            if (provider != null) {
+                sslContext = SSLContext.getInstance(protocol, Constants.BCJSSE);
+            } else {
+                sslContext = SSLContext.getInstance(protocol);
+            }
             sslContext.init(keyManagers, trustManagers, null);
             int sessionTimeout = sslConfig.getSessionTimeOut();
             if (isServer) {
@@ -122,16 +137,23 @@ public class SSLHandlerFactory {
         } catch (UnrecoverableKeyException | KeyManagementException |
                 NoSuchAlgorithmException | KeyStoreException | IOException e) {
             throw new IllegalArgumentException("Failed to initialize the SSLContext: " + e.getMessage());
+        } catch (NoSuchProviderException e) {
+            throw new RuntimeException(e);
         }
     }
 
     private KeyStore getKeyStore(File keyStore, String keyStorePassword, String tlsStoreType) throws IOException {
         KeyStore ks = null;
         if (keyStore != null && keyStorePassword != null) {
-            try (InputStream is = new FileInputStream(keyStore)) {
-                ks = KeyStore.getInstance(tlsStoreType);
+            try (InputStream is = Files.newInputStream(keyStore.toPath())) {
+                String provider = Util.getPreferredJceProvider();
+                if (provider != null) {
+                    ks = KeyStore.getInstance(tlsStoreType, provider);
+                } else {
+                    ks = KeyStore.getInstance(tlsStoreType);
+                }
                 ks.load(is, keyStorePassword.toCharArray());
-            } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException e) {
+            } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | NoSuchProviderException e) {
                 throw new IOException(e);
             }
         }

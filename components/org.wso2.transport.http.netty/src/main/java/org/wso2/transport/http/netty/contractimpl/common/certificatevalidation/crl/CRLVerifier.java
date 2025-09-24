@@ -30,6 +30,7 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.CertificateVerificationException;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.Constants;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.RevocationStatus;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.NoSuchProviderException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -124,7 +126,13 @@ public class CRLVerifier implements RevocationVerifier {
     protected X509CRL downloadCRLFromWeb(String crlURL) throws IOException, CertificateVerificationException {
         URL url = new URL(crlURL);
         try (InputStream crlStream = url.openStream()) {
-            CertificateFactory cf = CertificateFactory.getInstance(Constants.X_509);
+            String provider = Util.getPreferredJceProvider();
+            CertificateFactory cf;
+            if (provider != null) {
+                cf = CertificateFactory.getInstance(Constants.X_509, provider);
+            } else {
+                cf = CertificateFactory.getInstance(Constants.X_509);
+            }
             return (X509CRL) cf.generateCRL(crlStream);
         } catch (MalformedURLException e) {
             throw new CertificateVerificationException("CRL URL is malformed", e);
@@ -134,6 +142,9 @@ public class CRLVerifier implements RevocationVerifier {
             throw new CertificateVerificationException(e);
         } catch (CRLException e) {
             throw new CertificateVerificationException("Cannot generate X509CRL from the stream data", e);
+        } catch (NoSuchProviderException e) {
+            throw new CertificateVerificationException("Specified security provider is not available in " +
+                    "this environment: ", e);
         }
     }
 

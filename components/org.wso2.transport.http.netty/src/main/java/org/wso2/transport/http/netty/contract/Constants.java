@@ -111,6 +111,8 @@ public final class Constants {
     public static final String HTTP_SCHEME = "http";
     public static final String HTTPS_SCHEME = "https";
     public static final String JKS = "JKS";
+    public static final String PKIX = "PKIX";
+    public static final String BCJSSE = "BCJSSE";
     public static final String TLS_PROTOCOL = "TLS";
     public static final String REQUIRE = "require";
     public static final String OPTIONAL = "optional";

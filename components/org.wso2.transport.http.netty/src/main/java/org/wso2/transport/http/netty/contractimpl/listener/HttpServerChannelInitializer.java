@@ -60,6 +60,7 @@ import org.wso2.transport.http.netty.contractimpl.sender.CertificateValidationHa
 
 import java.io.IOException;
 import java.security.KeyStoreException;
+import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.TimeUnit;
 
@@ -148,7 +149,8 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     }
 
     private OCSPResp getOcspResponse()
-            throws IOException, KeyStoreException, CertificateVerificationException, CertificateException {
+            throws IOException, KeyStoreException, CertificateVerificationException, CertificateException,
+            NoSuchProviderException {
         OCSPResp response = OCSPResponseBuilder.generateOcspResponse(sslConfig, cacheSize, cacheDelay);
         if (!OpenSsl.isAvailable()) {
             throw new IllegalStateException("OpenSSL is not available!");
@@ -160,7 +162,8 @@ public class HttpServerChannelInitializer extends ChannelInitializer<SocketChann
     }
 
     private void configureSslForHttp(ChannelPipeline serverPipeline, SocketChannel ch)
-            throws CertificateVerificationException, KeyStoreException, IOException, CertificateException {
+            throws CertificateVerificationException, KeyStoreException, IOException, CertificateException,
+            NoSuchProviderException {
         SSLEngine sslEngine;
         SslHandler sslHandler;
         if (ocspStaplingEnabled) {

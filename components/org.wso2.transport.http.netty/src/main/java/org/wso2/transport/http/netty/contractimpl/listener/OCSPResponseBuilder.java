@@ -27,6 +27,7 @@ import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.SingleResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.CertificateVerificationException;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.Constants;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.ocsp.OCSPCache;
@@ -37,9 +38,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -61,7 +64,8 @@ public class OCSPResponseBuilder {
     private static X509Certificate issuer = null;
 
     static OCSPResp generateOcspResponse(SSLConfig sslConfig, int cacheAllocatedSize, int cacheDelay)
-            throws IOException, KeyStoreException, CertificateVerificationException, CertificateException {
+            throws IOException, KeyStoreException, CertificateVerificationException, CertificateException,
+            NoSuchProviderException {
 
         int cacheSize = Constants.CACHE_DEFAULT_ALLOCATED_SIZE;
         int cacheDelayMins = Constants.CACHE_DEFAULT_DELAY_MINS;
@@ -142,10 +146,15 @@ public class OCSPResponseBuilder {
             throws IOException {
         KeyStore keyStore = null;
         if (keyStoreFile != null && keyStorePassword != null) {
-            try (InputStream inputStream = new FileInputStream(keyStoreFile)) {
-                keyStore = KeyStore.getInstance(tlsStoreType);
+            try (InputStream inputStream = Files.newInputStream(keyStoreFile.toPath())) {
+                String provider = Util.getPreferredJceProvider();
+                if (provider != null) {
+                    keyStore = KeyStore.getInstance(tlsStoreType, provider);
+                } else {
+                    keyStore = KeyStore.getInstance(tlsStoreType);
+                }
                 keyStore.load(inputStream, keyStorePassword.toCharArray());
-            } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException e) {
+            } catch (CertificateException | NoSuchAlgorithmException | KeyStoreException | NoSuchProviderException e) {
                 throw new IOException(e);
             }
         }
@@ -219,8 +228,15 @@ public class OCSPResponseBuilder {
         throw new CertificateVerificationException("Could not get revocation status from OCSP.");
     }
 
-    public static List<X509Certificate> getCertInfo(SSLConfig sslConfig) throws CertificateException, IOException {
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
+    public static List<X509Certificate> getCertInfo(SSLConfig sslConfig) throws CertificateException, IOException,
+            NoSuchProviderException {
+        String provider = Util.getPreferredJceProvider();
+        CertificateFactory certificateFactory;
+        if (provider != null) {
+            certificateFactory = CertificateFactory.getInstance(Constants.X_509, provider);
+        } else {
+            certificateFactory = CertificateFactory.getInstance(Constants.X_509);
+        }
         try (FileInputStream certInputStream = new FileInputStream(sslConfig.getServerCertificates())) {
             while (certInputStream.available() > 1) {
                 Certificate cert = certificateFactory.generateCertificate(certInputStream);
