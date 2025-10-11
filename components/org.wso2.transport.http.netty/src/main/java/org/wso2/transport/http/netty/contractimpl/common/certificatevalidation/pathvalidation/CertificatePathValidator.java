@@ -20,13 +20,11 @@ package org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.transport.http.netty.contractimpl.common.Util;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.CertificateVerificationException;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.Constants;
 import org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.RevocationVerifier;
 
-import java.security.NoSuchProviderException;
-import java.security.Provider;
-import java.security.Security;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
@@ -80,31 +78,28 @@ public class CertificatePathValidator {
      * @throws Exception if validation process fails.
      */
     public void validatePath() throws Exception {
-        String jceProvider = getPreferredJceProvider();
-        String providerClass;
-        if (Constants.BOUNCY_CASTLE_PROVIDER.equals(jceProvider)) {
-            providerClass = "org.bouncycastle.jce.provider.BouncyCastleProvider";
-        } else if (Constants.BOUNCY_CASTLE_FIPS_PROVIDER.equals(jceProvider)) {
-            providerClass = "org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider";
-        } else {
-            throw new NoSuchProviderException("Configured JCE provider " + jceProvider + " is not supported");
-        }
-        Security.addProvider((Provider) Class.forName(providerClass).getDeclaredConstructor().newInstance());
+        String jceProvider = Util.getPreferredJceProvider();
         CollectionCertStoreParameters params = new CollectionCertStoreParameters(fullCertChain);
         try {
-            CertStore store = CertStore.getInstance("Collection", params, Constants.BOUNCY_CASTLE_PROVIDER);
-
-            // create certificate path
-            CertificateFactory fact = CertificateFactory
-                    .getInstance(Constants.X_509, Constants.BOUNCY_CASTLE_PROVIDER);
-
+            CertificateFactory fact;
+            CertStore store;
+            CertPathValidator validator;
+            if (jceProvider != null) {
+                store = CertStore.getInstance("Collection", params, jceProvider);
+                // create certificate path
+                fact = CertificateFactory.getInstance(Constants.X_509, jceProvider);
+                // perform validation
+                validator = CertPathValidator.getInstance(Constants.ALGORITHM, jceProvider);
+            } else {
+                store = CertStore.getInstance("Collection", params);
+                // create certificate path
+                fact = CertificateFactory.getInstance(Constants.X_509);
+                validator = CertPathValidator.getInstance(Constants.ALGORITHM);
+            }
             CertPath certPath = fact.generateCertPath(certChain);
             TrustAnchor trustAnchor = new TrustAnchor(fullCertChain.get(fullCertChain.size() - 1), null);
             Set<TrustAnchor> trust = Collections.singleton(trustAnchor);
 
-            // perform validation
-            CertPathValidator validator = CertPathValidator
-                    .getInstance(Constants.ALGORITHM, Constants.BOUNCY_CASTLE_PROVIDER);
             PKIXParameters param = new PKIXParameters(trust);
 
             param.addCertPathChecker(pathChecker);
@@ -123,19 +118,6 @@ public class CertificatePathValidator {
         } catch (Exception e) {
             throw new CertificateVerificationException("Certificate path validation failed", e);
         }
-    }
-
-    /**
-     * Get the preferred JCE provider.
-     *
-     * @return the preferred JCE provider
-     */
-    private static String getPreferredJceProvider() {
-        String provider = System.getProperty("security.jce.provider");
-        if (provider != null && provider.equalsIgnoreCase(Constants.BOUNCY_CASTLE_FIPS_PROVIDER)) {
-            return Constants.BOUNCY_CASTLE_FIPS_PROVIDER;
-        }
-        return Constants.BOUNCY_CASTLE_PROVIDER;
     }
 }
 
