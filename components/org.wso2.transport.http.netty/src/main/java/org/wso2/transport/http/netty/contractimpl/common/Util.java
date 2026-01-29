@@ -371,8 +371,13 @@ public class Util {
                     sslConfig.getReferenceCountedOpenSslContext();
 
             if (referenceCountedOpenSslContext != null) {
-                sslHandler = referenceCountedOpenSslContext.newHandler(socketChannel.alloc());
+                sslHandler = referenceCountedOpenSslContext.newHandler(socketChannel.alloc(), host, port);
                 sslEngine = sslHandler.engine();
+                 SSLHandlerFactory sslHandlerFactory = sslConfig.getSslHandlerFactory();
+                 sslHandlerFactory.setSNIServerNames(sslEngine, host);
+                 if (sslConfig.isHostNameVerificationEnabled()) {
+                     sslHandlerFactory.setHostNameVerfication(sslEngine);
+                 }
                 setSslHandshakeTimeOut(sslConfig, sslHandler);
                 socketChannel.pipeline().addLast(sslHandler);
                 socketChannel.pipeline().addLast(new OCSPStaplingHandler((ReferenceCountedOpenSslEngine) sslEngine));

@@ -178,8 +178,13 @@ public class HttpClientChannelInitializer extends ChannelInitializer<SocketChann
             ReferenceCountedOpenSslContext referenceCountedOpenSslContext =
                     sslConfig.getReferenceCountedOpenSslContext();
             if (referenceCountedOpenSslContext != null) {
-                SslHandler sslHandler = referenceCountedOpenSslContext.newHandler(ch.alloc());
+                SslHandler sslHandler = referenceCountedOpenSslContext.newHandler(ch.alloc(),
+                        httpRoute.getHost(), httpRoute.getPort());
                 ReferenceCountedOpenSslEngine engine = (ReferenceCountedOpenSslEngine) sslHandler.engine();
+                sslHandlerFactory.setSNIServerNames(engine, httpRoute.getHost());
+                if (sslConfig.isHostNameVerificationEnabled()) {
+                    sslHandlerFactory.setHostNameVerfication(engine);
+                }
                 setSslHandshakeTimeOut(sslConfig, sslHandler);
                 ch.pipeline().addLast(sslHandler);
                 ch.pipeline().addLast(new OCSPStaplingHandler(engine));
