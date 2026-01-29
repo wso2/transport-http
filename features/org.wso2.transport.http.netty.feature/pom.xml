@@ -34,43 +34,9 @@
             <groupId>org.wso2.transport.http</groupId>
             <artifactId>org.wso2.transport.http.netty</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-buffer</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-handler</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-resolver</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport-native-unix-common</artifactId>
-            <version>${netty.version}</version>
+            <groupId>org.wso2.orbit.io.netty</groupId>
+            <artifactId>netty-all</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-pool.wso2</groupId>
@@ -132,40 +98,8 @@
                             </adviceFileContents>
                             <bundles>
                                 <bundle>
-                                    <symbolicName>io.netty.common</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.transport</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.codec</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.codec-http</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.handler</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.buffer</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.codec-http2</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>io.netty.resolver</symbolicName>
-                                    <version>${netty.version}</version>
-                                </bundle>
-                                <bundle>
-                                    <symbolicName>commons-pool</symbolicName>
-                                    <version>${commons.pool.version}</version>
+                                    <symbolicName>netty-all</symbolicName>
+                                    <version>${netty.wso2.version}</version>
                                 </bundle>
                                 <bundle>
                                     <symbolicName>commons-pool</symbolicName>
