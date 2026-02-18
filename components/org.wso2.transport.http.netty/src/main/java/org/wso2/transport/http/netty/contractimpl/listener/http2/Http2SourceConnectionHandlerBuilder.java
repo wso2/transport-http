@@ -44,14 +44,17 @@ public final class Http2SourceConnectionHandlerBuilder
     private ServerConnectorFuture serverConnectorFuture;
     private String serverName;
     private HttpServerChannelInitializer serverChannelInitializer;
+    private long maxHeaderListSize;
 
     public Http2SourceConnectionHandlerBuilder(String interfaceId, ServerConnectorFuture serverConnectorFuture,
                                                String serverName,
-                                               HttpServerChannelInitializer serverChannelInitializer) {
+                                               HttpServerChannelInitializer serverChannelInitializer,
+                                               long maxHeaderListSize) {
         this.interfaceId = interfaceId;
         this.serverConnectorFuture = serverConnectorFuture;
         this.serverName = serverName;
         this.serverChannelInitializer = serverChannelInitializer;
+        this.maxHeaderListSize = maxHeaderListSize;
     }
 
     @Override
@@ -61,6 +64,7 @@ public final class Http2SourceConnectionHandlerBuilder
             frameLogger(new FrameLogger(TRACE, Constants.TRACE_LOG_DOWNSTREAM));
         }
         connection(conn);
+        this.initialSettings().maxHeaderListSize(maxHeaderListSize);
         Http2SourceConnectionHandler connectionHandler = super.build();
         if (connectionHandler != null) {
             return connectionHandler;
