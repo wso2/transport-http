@@ -64,7 +64,9 @@ public final class Http2SourceConnectionHandlerBuilder
             frameLogger(new FrameLogger(TRACE, Constants.TRACE_LOG_DOWNSTREAM));
         }
         connection(conn);
-        this.initialSettings().maxHeaderListSize(maxHeaderListSize);
+        if (maxHeaderListSize > 0) {
+            this.initialSettings().maxHeaderListSize(maxHeaderListSize);
+        }
         Http2SourceConnectionHandler connectionHandler = super.build();
         if (connectionHandler != null) {
             return connectionHandler;
