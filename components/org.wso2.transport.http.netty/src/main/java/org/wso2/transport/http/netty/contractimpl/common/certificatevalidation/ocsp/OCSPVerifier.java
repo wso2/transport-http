@@ -18,8 +18,8 @@
  */
 package org.wso2.transport.http.netty.contractimpl.common.certificatevalidation.ocsp;
 
+import org.bouncycastle.asn1.ASN1IA5String;
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
@@ -291,7 +291,7 @@ public class OCSPVerifier implements RevocationVerifier {
 
             GeneralName gn = accessDescription.getAccessLocation();
             if (gn.getTagNo() == GeneralName.uniformResourceIdentifier) {
-                DERIA5String str = DERIA5String.getInstance(gn.getName());
+                ASN1IA5String str = ASN1IA5String.getInstance(gn.getName());
                 String accessLocation = str.getString();
                 ocspUrlList.add(accessLocation);
             }
