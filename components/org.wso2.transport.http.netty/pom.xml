@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.wso2.transport.http</groupId>
         <artifactId>http-parent</artifactId>
-        <version>6.3.61-SNAPSHOT</version>
+        <version>6.4.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -99,6 +99,10 @@
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative-boringssl-static</artifactId>
             <version>${netty-tcnative-boringssl-static.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mashape.unirest</groupId>
