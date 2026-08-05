@@ -23,7 +23,6 @@ import org.junit.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.transport.http.netty.chunkdisable.ChunkClientTemplate;
-import org.wso2.transport.http.netty.contract.Constants;
 import org.wso2.transport.http.netty.contract.config.ChunkConfig;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.util.TestUtil;
@@ -43,16 +42,18 @@ public class ChunkAlwaysHttpOnePointZeroClientTestCase extends ChunkClientTempla
     @Test
     public void postTest() {
         try {
+            // RFC 9112 §6.1: Transfer-Encoding is not allowed in HTTP/1.0.
+            // Netty 4.2.16+ enforces this, so ChunkConfig.ALWAYS falls back to Content-Length for HTTP/1.0.
             HttpCarbonMessage response = sendRequest(TestUtil.largeEntity);
-            Assert.assertNull("Content-Length header present in the response.",
+            Assert.assertNotNull("Content-Length header not present in the response.",
                     response.getHeader(HttpHeaderNames.CONTENT_LENGTH.toString()));
-            Assert.assertEquals("Transfer-Encoding header is not present in the response.", Constants.CHUNKED,
+            Assert.assertNull("Transfer-Encoding header present in the response.",
                     response.getHeader(HttpHeaderNames.TRANSFER_ENCODING.toString()));
 
             response = sendRequest(TestUtil.smallEntity);
-            Assert.assertNull("Content-Length header present in the response.",
+            Assert.assertNotNull("Content-Length header not present in the response.",
                     response.getHeader(HttpHeaderNames.CONTENT_LENGTH.toString()));
-            Assert.assertEquals("Transfer-Encoding header is not present in the response.", Constants.CHUNKED,
+            Assert.assertNull("Transfer-Encoding header present in the response.",
                     response.getHeader(HttpHeaderNames.TRANSFER_ENCODING.toString()));
 
         } catch (Exception e) {

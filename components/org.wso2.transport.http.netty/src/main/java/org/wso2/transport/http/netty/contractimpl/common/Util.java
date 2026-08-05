@@ -348,7 +348,7 @@ public class Util {
      * @return true if chunking should be enforced else false.
      */
     public static boolean shouldEnforceChunkingforHttpOneZero(ChunkConfig chunkConfig, String httpVersion) {
-        return chunkConfig == ChunkConfig.ALWAYS && Float.valueOf(httpVersion) >= Constants.HTTP_1_0;
+        return chunkConfig == ChunkConfig.ALWAYS && Float.valueOf(httpVersion) > Constants.HTTP_1_0;
     }
 
     /**
